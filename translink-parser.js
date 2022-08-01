@@ -1,4 +1,6 @@
-let prompt = require("prompt-sync")();
+let prompt = require("prompt-sync")({ sigint: true });
+
+const MAX_FAILED_ATTEMPTS = 4;
 
 console.log("Welcome to the UQ Lakes station bus tracker!");
 
@@ -39,9 +41,22 @@ function validateDate(date) {
  */
 function getDate() {
     let date;
+    let attempts = 0;
     do {
+        if (attempts) {
+            console.log(`    "${date}" is not a valid date.`)
+            console.log("    Please enter a date in YYYY-MM-DD format.")
+        }
+
         date = prompt("What date will you depart UQ Lakes station by bus? ");
-    } while (!validateDate(date));
+    } while (!validateDate(date) && ++attempts < MAX_FAILED_ATTEMPTS);
+
+    // exits the while loop on a valid attempt or on the maximum number of
+    // failed attempts. if valid, attempts will not be equal to the maximum
+    if (attempts === MAX_FAILED_ATTEMPTS) {
+        console.log("        You failed to enter a valid date.");
+        process.exit(1);
+    }
 
     let result = {
         year: parseInt(date.substring(0, 4)),
@@ -74,9 +89,22 @@ function validateTime(time) {
  */
 function getTime() {
     let time;
+    let attempts = 0;
     do {
+        if (attempts) {
+            console.log(`        "${time}" is not a valid time.`)
+            console.log("        Please enter a time in HH:mm format.")
+        }
+
         time = prompt("What time will you depart UQ Lakes station by bus? ");
-    } while (!validateTime(time));
+    } while (!validateTime(time) && ++attempts < MAX_FAILED_ATTEMPTS);
+
+    // exits the while loop on a valid attempt or on the maximum number of
+    // failed attempts. if valid, attempts will not be equal to the maximum
+    if (attempts === MAX_FAILED_ATTEMPTS) {
+        console.log("        You failed to enter a valid time.");
+        process.exit(1);
+    }
 
     let result = {
         hour: parseInt(time.substring(0, 2)),
@@ -105,9 +133,22 @@ function validateAgain(response) {
  */
 function getAgain() {
     let again;
+    let attempts = 0;
     do {
+        if (attempts) {
+            console.log(`    "${again}" is not a valid response.`)
+            console.log("    Please enter 'y', 'yes', 'n' or 'no'.")
+        }
+
         again = prompt("Would you like to search again? ").toLowerCase();
-    } while (!validateAgain(again));
+    } while (!validateAgain(again) && ++attempts < MAX_FAILED_ATTEMPTS);
+
+    // exits the while loop on a valid attempt or on the maximum number of
+    // failed attempts. if valid, attempts will not be equal to the maximum
+    if (attempts === MAX_FAILED_ATTEMPTS) {
+        console.log("    You failed to enter a valid response.");
+        process.exit(1);
+    }
 
     let yesRegex = /^(y|yes)$/;
     return yesRegex.test(again.toLowerCase());
