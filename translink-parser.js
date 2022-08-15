@@ -2,154 +2,213 @@ let prompt = require("prompt-sync")({ sigint: true });
 
 const MAX_FAILED_ATTEMPTS = 4;
 
-console.log("Welcome to the UQ Lakes station bus tracker!");
+/**
+ * Main program loop.
+ * @param {boolean} [welcome = true] whether to output the welcome message
+ */
+function main(welcome = true) {
+    if (welcome) {
+        console.log("Welcome to the UQ Lakes station bus tracker!");
+    }
 
-let date, time, again;
-do {
-    date = getDate();
-    time = getTime();
+    let date = getDate();
+    let time = getTime();
 
-
-    // parse data
+    // filter data
     // output data
 
-
-    again = getAgain();
-} while (again);
-
-console.log("Thanks for using the UQ Lakes bus tracker!")
-
-
-/**
- * Validates whether the given date is in ISO 8601 format: YYYY-MM-DD.
- * @param {string} date date string to validate
- * @returns {boolean} true if the date is valid, false otherwise
- */
-function validateDate(date) {
-    // "^" means "start of string"
-    // "\d" means "digit"
-    // "{n}" means "n occurrences"
-    // "$" means "end of string"
-    let dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    return dateRegex.test(date);
+    if (getAgain()) {
+        main(false);
+    } else {
+        console.log("Thanks for using the UQ Lakes Station bus tracker!");
+    }
 }
 
 
 /**
  * Prompts the user for the departure date to search.
+ * 
+ * @param {number} [attempts = 0] number of previously failed attempts
+ * @param {string} [previous = null] previous invalid date string
+ * 
  * @returns {object} date object with year, month and day properties
  */
-function getDate() {
-    let date;
-    let attempts = 0;
-    do {
-        if (attempts) {
-            console.log(`    "${date}" is not a valid date.`)
-            console.log("    Please enter a date in YYYY-MM-DD format.")
-        }
+function getDate(attempts = 0, previous = null) {
+    if (attempts) {
+        console.log(`    "${previous}" is not a valid date.`)
+    }
 
-        date = prompt("What date will you depart UQ Lakes station by bus? ");
-    } while (!validateDate(date) && ++attempts < MAX_FAILED_ATTEMPTS);
-
-    // exits the while loop on a valid attempt or on the maximum number of
-    // failed attempts. if valid, attempts will not be equal to the maximum
     if (attempts === MAX_FAILED_ATTEMPTS) {
-        console.log("        You failed to enter a valid date.");
+        console.log("    You failed to enter a valid date.");
         process.exit(1);
+    } else {
+        console.log("    Please enter a date in YYYY-MM-DD format.")
     }
 
-    let result = {
-        year: parseInt(date.substring(0, 4)),
-        month: parseInt(date.substring(5, 7)),
-        day: parseInt(date.substring(8))
+    let date = prompt("What date will you depart UQ Lakes station by bus? ");
+
+    if (validateDate(date)) {
+        return {
+            year: parseInt(date.substring(0, 4)),
+            month: parseInt(date.substring(5, 7)),
+            day: parseInt(date.substring(8))
+        };
     }
 
-    return result
-}
-
-
-/**
- * Validates whether the given date is in ISO 8601 format: HH:mm.
- * @param {string} time date string to validate
- * @returns {boolean} true if the date is valid, false otherwise
- */
-function validateTime(time) {
-    // "^" means "start of string"
-    // "\d" means "digit"
-    // "{n}" means "n occurrences"
-    // "$" means "end of string"
-    let timeRegex = /^\d{2}:\d{2}$/;
-    return timeRegex.test(time);
+    return getDate(++attempts, date);
 }
 
 
 /**
  * Prompts the user for the departure time to search.
+ * 
+ * @param {number} [attempts = 0] number of previously failed attempts
+ * @param {string} [previous = null] previous invalid time string
+ * 
  * @returns {object} time object with hour and minute properties
  */
-function getTime() {
-    let time;
-    let attempts = 0;
-    do {
-        if (attempts) {
-            console.log(`        "${time}" is not a valid time.`)
-            console.log("        Please enter a time in HH:mm format.")
-        }
+function getTime(attempts = 0, previous = null) {
+    if (attempts) {
+        console.log(`    "${previous}" is not a valid time.`)
+    }
 
-        time = prompt("What time will you depart UQ Lakes station by bus? ");
-    } while (!validateTime(time) && ++attempts < MAX_FAILED_ATTEMPTS);
-
-    // exits the while loop on a valid attempt or on the maximum number of
-    // failed attempts. if valid, attempts will not be equal to the maximum
     if (attempts === MAX_FAILED_ATTEMPTS) {
-        console.log("        You failed to enter a valid time.");
+        console.log("    You failed to enter a valid time.");
         process.exit(1);
+    } else {
+        console.log("    Please enter a time in HH:mm format.")
     }
 
-    let result = {
-        hour: parseInt(time.substring(0, 2)),
-        minute: parseInt(time.substring(3))
+    let time = prompt("What time will you depart UQ Lakes station by bus? ");
+
+    if (validateTime(time)) {
+        return {
+            hour: parseInt(time.substring(0, 2)),
+            minute: parseInt(time.substring(3))
+        };
     }
 
-    return result
+    return getTime(++attempts, time);
 }
 
 
 /**
- * Validates whether the given response is a valid yes or no response.
- * @param {string} response response string to validate
- * @returns {boolean} true if the response is valid; false otherwise
+ * Determines whether the given string represents a valid date.
+ * 
+ * @param {string} date date string to validate
+ * 
+ * @returns {boolean} `true` if the date string is valid; `false` otherwise
  */
-function validateAgain(response) {
-    // expected values: 'y', 'yes', 'n', 'no'; case-insensitive
-    let responseRegex = /^(y|yes|n|no)$/;
-    return responseRegex.test(response.toLowerCase());
+function validateDate(date) {
+    /**
+     * Determines whether the given string is of the correct format.
+     */
+    let validateDateFormat = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date);
+
+    /**
+     * Validates whether the given day is valid for the given month.
+     * 
+     * @param {number} month month number
+     * @param {number} day day number
+     * 
+     * @returns `true` if the day is valid for the given month; `false` otherwise
+     */
+    function validateDay(month, day) {
+        if (day < 1) {
+            return false;
+        }
+
+        switch (month) {
+            case 1, 3, 5, 7, 8, 10, 12:
+                return day <= 31;
+            case 4, 6, 9, 11:
+                return day <= 30;
+            case 2:
+                return day <= 28;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Determines whether each component of the given date string is valid.
+     * 
+     * @param {string[]} components components of the date string
+     * 
+     * @returns {boolean} `true` if the components are valid; `false` otherwise
+     */
+    function validateDateComponents(components) {
+        let integerComponents = components.map(component => parseInt(component));
+        let year, month, day = integerComponents;
+        return year > 2020
+            && month >= 1 && month <= 12
+            && validateDay(month, day);
+    }
+
+    return validateDateFormat(date) && validateDateComponents(date.split("-"));
+}
+
+
+/**
+ * Determines whether the given string represents a valid time.
+ * 
+ * @param {string} time time string to validate
+ * 
+ * @returns {boolean} `true` if the time string is valid; `false` otherwise
+ */
+function validateTime(time) {
+    /**
+     * Determines whether the given string is of the correct format.
+     */
+    let validateTimeFormat = (time) => /^\d{2}:\d{2}$/.test(time);
+
+    /**
+     * Determines whether each component of the given time string is valid.
+     * 
+     * @param {string[]} components components of the time string
+     * 
+     * @returns {boolean} `true` if the components are valid; `false` otherwise
+     */
+    function validateTimeComponents(components) {
+        let integerComponents = components.map(component => parseInt(component));
+        let hour, minute = integerComponents;
+        return hour >= 0 && hour <= 23
+            && minute >= 0 && minute <= 59;
+    }
+
+    return validateTimeFormat(time) && validateTimeComponents(time.split(":"));
 }
 
 
 /**
  * Prompts the user to determine whether they want to run the tracker again.
- * @returns {boolean} true if the user wants to run the tracker again; false otherwise
+ * 
+ * @param {number} [attempts = 0] number of previously failed attempts
+ * @param {string} [previous = null] previous invalid response string
+ * 
+ * @returns {boolean} `true` if the user wants to run the tracker again; `false` otherwise
  */
-function getAgain() {
-    let again;
-    let attempts = 0;
-    do {
-        if (attempts) {
-            console.log(`    "${again}" is not a valid response.`)
-            console.log("    Please enter 'y', 'yes', 'n' or 'no'.")
-        }
+function getAgain(attempts = 0, previous = null) {
+    if (attempts) {
+        console.log(`    "${again}" is not a valid response.`)
+    }
 
-        again = prompt("Would you like to search again? ").toLowerCase();
-    } while (!validateAgain(again) && ++attempts < MAX_FAILED_ATTEMPTS);
-
-    // exits the while loop on a valid attempt or on the maximum number of
-    // failed attempts. if valid, attempts will not be equal to the maximum
     if (attempts === MAX_FAILED_ATTEMPTS) {
         console.log("    You failed to enter a valid response.");
         process.exit(1);
+    } else {
+        console.log("    Please enter 'y', 'yes', 'n' or 'no'.")
     }
 
-    let yesRegex = /^(y|yes)$/;
-    return yesRegex.test(again.toLowerCase());
+    let again = prompt("Would you like to search again? ");
+
+    if (/^(y|yes)$/.test(again.toLowerCase())) {
+        return true;
+    } else if (/^(n|no)$/.test(again.toLowerCase())) {
+        return false;
+    }
+
+    return getAgain(++attempts, again);
 }
+
+main();
