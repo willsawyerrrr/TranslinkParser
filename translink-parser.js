@@ -4,6 +4,7 @@ const MAX_FAILED_ATTEMPTS = 4;
 
 /**
  * Main program loop.
+ * 
  * @param {boolean} [welcome = true] whether to output the welcome message
  */
 function main(welcome = true) {
@@ -36,13 +37,13 @@ function main(welcome = true) {
 function getDate(attempts = 0, previous = null) {
     if (attempts) {
         console.log(`    "${previous}" is not a valid date.`)
-    }
 
-    if (attempts === MAX_FAILED_ATTEMPTS) {
-        console.log("    You failed to enter a valid date.");
-        process.exit(1);
-    } else {
-        console.log("    Please enter a date in YYYY-MM-DD format.")
+        if (attempts === MAX_FAILED_ATTEMPTS) {
+            console.log("    You failed to enter a valid date.");
+            process.exit(1);
+        } else {
+            console.log("    Please enter a date in YYYY-MM-DD format.")
+        }
     }
 
     let date = prompt("What date will you depart UQ Lakes station by bus? ");
@@ -70,13 +71,13 @@ function getDate(attempts = 0, previous = null) {
 function getTime(attempts = 0, previous = null) {
     if (attempts) {
         console.log(`    "${previous}" is not a valid time.`)
-    }
 
-    if (attempts === MAX_FAILED_ATTEMPTS) {
-        console.log("    You failed to enter a valid time.");
-        process.exit(1);
-    } else {
-        console.log("    Please enter a time in HH:mm format.")
+        if (attempts === MAX_FAILED_ATTEMPTS) {
+            console.log("    You failed to enter a valid time.");
+            process.exit(1);
+        } else {
+            console.log("    Please enter a time in HH:mm format.")
+        }
     }
 
     let time = prompt("What time will you depart UQ Lakes station by bus? ");
@@ -119,9 +120,18 @@ function validateDate(date) {
         }
 
         switch (month) {
-            case 1, 3, 5, 7, 8, 10, 12:
+            case 1:
+            case 3:
+            case 5:
+            case 7:
+            case 8:
+            case 10:
+            case 12:
                 return day <= 31;
-            case 4, 6, 9, 11:
+            case 4:
+            case 6:
+            case 9:
+            case 11:
                 return day <= 30;
             case 2:
                 return day <= 28;
@@ -139,7 +149,7 @@ function validateDate(date) {
      */
     function validateDateComponents(components) {
         let integerComponents = components.map(component => parseInt(component));
-        let year, month, day = integerComponents;
+        let [year, month, day] = integerComponents;
         return year > 2020
             && month >= 1 && month <= 12
             && validateDay(month, day);
@@ -171,7 +181,7 @@ function validateTime(time) {
      */
     function validateTimeComponents(components) {
         let integerComponents = components.map(component => parseInt(component));
-        let hour, minute = integerComponents;
+        let [hour, minute] = integerComponents;
         return hour >= 0 && hour <= 23
             && minute >= 0 && minute <= 59;
     }
@@ -191,13 +201,13 @@ function validateTime(time) {
 function getAgain(attempts = 0, previous = null) {
     if (attempts) {
         console.log(`    "${again}" is not a valid response.`)
-    }
 
-    if (attempts === MAX_FAILED_ATTEMPTS) {
-        console.log("    You failed to enter a valid response.");
-        process.exit(1);
-    } else {
-        console.log("    Please enter 'y', 'yes', 'n' or 'no'.")
+        if (attempts === MAX_FAILED_ATTEMPTS) {
+            console.log("    You failed to enter a valid response.");
+            process.exit(1);
+        } else {
+            console.log("    Please enter 'y', 'yes', 'n' or 'no'.")
+        }
     }
 
     let again = prompt("Would you like to search again? ");
