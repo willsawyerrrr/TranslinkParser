@@ -1,4 +1,6 @@
-let prompt = require("prompt-sync")({ sigint: true });
+import { main as retrieveApiData } from "./api.mjs";
+import promptSync from "prompt-sync";
+const prompt = promptSync({ sigint: true });
 
 const MAX_FAILED_ATTEMPTS = 4;
 
@@ -220,5 +222,8 @@ function getAgain(attempts = 0, previous = null) {
 
     return getAgain(++attempts, again);
 }
+
+retrieveApiData();
+setInterval(retrieveApiData, 300000);
 
 main();

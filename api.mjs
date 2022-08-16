@@ -1,5 +1,5 @@
-let fetch = require("node-fetch");
-let fs = require("fs");
+import fetch from "node-fetch";
+import fs from "fs";
 
 
 /**
@@ -106,7 +106,7 @@ function writeApiData(alerts, tripUpdates, vehiclePositions) {
 }
 
 
-async function main() {
+export async function main() {
     let data = await getApiData();
     writeApiData(data[0], data[1], data[2]);
 }
