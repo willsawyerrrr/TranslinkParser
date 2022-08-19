@@ -1,4 +1,4 @@
-import { main as retrieveApiData } from "./api.mjs";
+import { main as retrieveApiData } from "./api.js";
 import promptSync from "prompt-sync";
 const prompt = promptSync({ sigint: true });
 
