@@ -24,6 +24,7 @@ function main(welcome = true) {
         main(false);
     } else {
         console.log("Thanks for using the UQ Lakes Station bus tracker!");
+        process.exit(0);
     }
 }
 
