@@ -1,7 +1,10 @@
 import { main as retrieveApiData } from "./api.js";
 import { getStaticData } from "./static.js";
-import promptSync from "prompt-sync";
-const prompt = promptSync({ sigint: true });
+
+import prompt from "prompt";
+prompt.message = "";
+prompt.delimiter = "";
+prompt.colors = false;
 
 const MAX_FAILED_ATTEMPTS = 4;
 
@@ -14,23 +17,37 @@ let calendarDates, calendar, routes,
  * 
  * @param {boolean} [welcome = true] whether to output the welcome message
  */
-function main(welcome = true) {
+async function main(welcome = true) {
     if (welcome) {
         console.log("Welcome to the UQ Lakes station bus tracker!");
     }
 
-    let date = getDate();
-    let time = getTime();
+    let date = await getDate();
+    let time = await getTime();
 
     // filter data
     // output data
 
-    if (getAgain()) {
-        main(false);
+    if (await getAgain()) {
+        await main(false);
     } else {
         console.log("Thanks for using the UQ Lakes Station bus tracker!");
         process.exit(0);
     }
+}
+
+function getPromptSchema(purpose) {
+    let description = (purpose == "again")
+        ? "Would you like to search again?"
+        : `What ${purpose} will you depart UQ Lakes station by bus? `;
+
+    return {
+        properties: {
+            property: {
+                description: description
+            }
+        },
+    };
 }
 
 
@@ -42,7 +59,7 @@ function main(welcome = true) {
  * 
  * @returns {object} date object with year, month and day properties
  */
-function getDate(attempts = 0, previous = null) {
+async function getDate(attempts = 0, previous = null) {
     /**
      * Determines whether the given string represents a valid date.
      * 
@@ -119,7 +136,8 @@ function getDate(attempts = 0, previous = null) {
         }
     }
 
-    let date = prompt("What date will you depart UQ Lakes station by bus? ");
+    let promptResult = await prompt.get(getPromptSchema("date"));
+    let date = promptResult.property;
 
     if (validateDate(date)) {
         return {
@@ -129,7 +147,7 @@ function getDate(attempts = 0, previous = null) {
         };
     }
 
-    return getDate(++attempts, date);
+    return await getDate(++attempts, date);
 }
 
 
@@ -141,7 +159,7 @@ function getDate(attempts = 0, previous = null) {
  * 
  * @returns {object} time object with hour and minute properties
  */
-function getTime(attempts = 0, previous = null) {
+async function getTime(attempts = 0, previous = null) {
     /**
      * Determines whether the given string represents a valid time.
      * 
@@ -183,7 +201,8 @@ function getTime(attempts = 0, previous = null) {
         }
     }
 
-    let time = prompt("What time will you depart UQ Lakes station by bus? ");
+    let result = await prompt.get(getPromptSchema("time"));
+    let time = result.property;
 
     if (validateTime(time)) {
         return {
@@ -192,7 +211,7 @@ function getTime(attempts = 0, previous = null) {
         };
     }
 
-    return getTime(++attempts, time);
+    return await getTime(++attempts, time);
 }
 
 
@@ -204,7 +223,7 @@ function getTime(attempts = 0, previous = null) {
  * 
  * @returns {boolean} `true` if the user wants to run the tracker again; `false` otherwise
  */
-function getAgain(attempts = 0, previous = null) {
+async function getAgain(attempts = 0, previous = null) {
     if (attempts) {
         console.log(`    "${again}" is not a valid response.`)
 
@@ -216,7 +235,8 @@ function getAgain(attempts = 0, previous = null) {
         }
     }
 
-    let again = prompt("Would you like to search again? ");
+    let result = await prompt.get(getPromptSchema("again"));
+    let again = result.property;
 
     if (/^(y|yes)$/.test(again.toLowerCase())) {
         return true;
