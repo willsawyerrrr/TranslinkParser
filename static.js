@@ -223,12 +223,12 @@ export async function getStaticData() {
         return filterRoutes(parsedRoutes, trips);
     }
 
-    return {
-        stops: await getStops(),
-        stopTimes: await getStopTimes(stops),
-        trips: await getTrips(stopTimes),
-        calendarDates: await getCalendarDates(trips),
-        calendar: await getCalendar(trips),
-        routes: await getRoutes(trips)
-    };
+    let stops = await getStops();
+    let stopTimes = await getStopTimes(stops);
+    let trips = await getTrips(stopTimes);
+    let calendarDates = await getCalendarDates(trips);
+    let calendar = await getCalendar(trips);
+    let routes = await getRoutes(trips);
+
+    return { stops, stopTimes, trips, calendarDates, calendar, routes };
 }
