@@ -159,7 +159,7 @@ export async function getStaticData() {
          * @returns {object} stops relevant to UQ Lakes Station
          */
         function filterStops(stops) {
-            return stops.filter(stop => true);
+            return stops.filter(stop => /\.*UQ Lakes\.*/.test(stop.stop_name));
         }
 
         let stops = await readFile("static/stops.txt");
