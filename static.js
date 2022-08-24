@@ -106,37 +106,6 @@ export async function getStaticData() {
     }
 
     /**
-     * Gets shapes relevant to UQ Lakes Station.
-     * @returns {object} shapes relevant to UQ Lakes Station
-     */
-    async function getShapes() {
-        /**
-         * Parses a CSV string into an object.
-         * 
-         * @param {string} shapes CSV string
-         */
-        function parseShapes(shapes) {
-            let options = getParseOptions();
-            return parse(shapes, options)
-        }
-
-        /**
-         * Filters shapes to those relevant to UQ Lakes Station.
-         * 
-         * @param {object} shapes all shapes from the static data
-         * 
-         * @returns {object} shapes relevant to UQ Lakes Station
-         */
-        function filterShapes(shapes) {
-            return shapes.filter(shape => true);
-        }
-
-        let shapes = await readFile("static/shapes.txt");
-        let parsedShapes = parseShapes(shapes.toString());
-        return filterShapes(parsedShapes);
-    }
-
-    /**
      * Gets stop times relevant to UQ Lakes Station.
      * @returns {object} stop times relevant to UQ Lakes Station
      */
@@ -233,7 +202,6 @@ export async function getStaticData() {
         calendarDates: await getCalendarDates(),
         calendar: await getCalendar(),
         routes: await getRoutes(),
-        shapes: await getShapes(),
         stopTimes: await getStopTimes(),
         stops: await getStops(),
         trips: await getTrips()
