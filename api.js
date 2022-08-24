@@ -90,21 +90,26 @@ async function getApiData() {
 /**
  * Writes API data to local cached files.
  */
-function writeApiData(alerts, tripUpdates, vehiclePositions) {
+async function writeApiData(alerts, tripUpdates, vehiclePositions) {
     /** Callback function used to log errors. */
-    const logError = (error) => { if (error) console.log(error) };
+    const logError = (error) => {
+        if (error) {
+            console.log(error);
+        }
+        console.log('done');
+    };
 
     /** Writes the entity to a local cached file. */
-    function writeApiDataHelper(filename, entity) {
-        fs.writeFile(`cache/${filename}.json`,
+    async function writeApiDataHelper(filename, entity) {
+        await fs.writeFile(`cache/${filename}.json`,
             JSON.stringify(entity, null, 4),
             logError
         );
     }
 
-    writeApiDataHelper("alerts", alerts);
-    writeApiDataHelper("trip_updates", tripUpdates);
-    writeApiDataHelper("vehicle_positions", vehiclePositions);
+    await writeApiDataHelper("alerts", alerts);
+    await writeApiDataHelper("trip_updates", tripUpdates);
+    await writeApiDataHelper("vehicle_positions", vehiclePositions);
 }
 
 
