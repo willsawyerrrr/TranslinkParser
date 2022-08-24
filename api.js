@@ -95,16 +95,16 @@ function writeApiData(alerts, tripUpdates, vehiclePositions) {
     const logError = (error) => { if (error) console.log(error) };
 
     /** Writes the entity to a local cached file. */
-    function writeApiDataType(filename, entity) {
+    function writeApiDataHelper(filename, entity) {
         fs.writeFile(`cache/${filename}.json`,
             JSON.stringify(entity, null, 4),
             logError
         );
     }
 
-    writeApiDataType("alerts", alerts);
-    writeApiDataType("trip_updates", tripUpdates);
-    writeApiDataType("vehicle_positions", vehiclePositions);
+    writeApiDataHelper("alerts", alerts);
+    writeApiDataHelper("trip_updates", tripUpdates);
+    writeApiDataHelper("vehicle_positions", vehiclePositions);
 }
 
 
