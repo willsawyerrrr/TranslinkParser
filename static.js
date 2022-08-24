@@ -105,14 +105,14 @@ export async function getStaticData() {
          * 
          * @returns {object} trips relevant to UQ Lakes Station
          */
-        function filterCalendarDates(trips, stopTimes) {
+        function filterTrips(trips, stopTimes) {
             let tripIds = stopTimes.map(stopTime => stopTime.trip_id);
             return trips.filter(trip => tripIds.includes(trip.trip_id));
         }
 
         let trips = await readFile("static/trips.txt");
         let parsedTrips = parseTrips(trips.toString());
-        return filterCalendarDates(parsedTrips, stopTimes);
+        return filterTrips(parsedTrips, stopTimes);
     }
 
     /**
