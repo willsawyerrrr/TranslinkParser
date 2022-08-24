@@ -106,37 +106,6 @@ export async function getStaticData() {
     }
 
     /**
-     * Gets stop times relevant to UQ Lakes Station.
-     * @returns {object} stop times relevant to UQ Lakes Station
-     */
-    async function getStopTimes() {
-        /**
-         * Parses a CSV string into an object.
-         * 
-         * @param {string} stopTimes CSV string
-         */
-        function parseStopTimes(stopTimes) {
-            let options = getParseOptions();
-            return parse(stopTimes, options)
-        }
-
-        /**
-         * Filters stop times to those relevant to UQ Lakes Station.
-         * 
-         * @param {array} stopTimes all stop times from the static data
-         * 
-         * @returns {object} stop times relevant to UQ Lakes Station
-         */
-        function filterStopTimes(stopTimes) {
-            return stopTimes.filter(stopTime => true);
-        }
-
-        let stopTimes = await readFile("static/stop_times.txt");
-        let parsedStopTimes = parseStopTimes(stopTimes.toString());
-        return filterStopTimes(parsedStopTimes);
-    }
-
-    /**
      * Gets stops relevant to UQ Lakes Station.
      * @returns {object} stops relevant to UQ Lakes Station
      */
@@ -165,6 +134,42 @@ export async function getStaticData() {
         let stops = await readFile("static/stops.txt");
         let parsedStops = parseStops(stops.toString());
         return filterStops(parsedStops);
+    }
+
+    /**
+     * Gets stop times relevant to UQ Lakes Station.
+     * 
+     * @param {array} stops stops relevant to UQ Lakes Station
+     * 
+     * @returns {object} stop times relevant to UQ Lakes Station
+     */
+    async function getStopTimes(stops) {
+        /**
+         * Parses a CSV string into an object.
+         * 
+         * @param {string} stopTimes CSV string
+         */
+        function parseStopTimes(stopTimes) {
+            let options = getParseOptions();
+            return parse(stopTimes, options)
+        }
+
+        /**
+         * Filters stop times to those relevant to UQ Lakes Station.
+         * 
+         * @param {array} stopTimes all stop times from the static data
+         * @param {array} stops stops relevant to UQ Lakes Station
+         * 
+         * @returns {object} stop times relevant to UQ Lakes Station
+         */
+        function filterStopTimes(stopTimes, stops) {
+            let stopIds = stops.map(stop => stop.stop_id);
+            return stopTimes.filter(stopTime => stopIds.includes(stopTime.stop_id));
+        }
+
+        let stopTimes = await readFile("static/stop_times.txt");
+        let parsedStopTimes = parseStopTimes(stopTimes.toString());
+        return filterStopTimes(parsedStopTimes);
     }
 
     /**
@@ -202,8 +207,8 @@ export async function getStaticData() {
         calendarDates: await getCalendarDates(),
         calendar: await getCalendar(),
         routes: await getRoutes(),
-        stopTimes: await getStopTimes(),
         stops: await getStops(),
+        stopTimes: await getStopTimes(stops),
         trips: await getTrips()
     };
 }
