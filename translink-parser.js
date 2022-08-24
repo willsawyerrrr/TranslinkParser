@@ -225,7 +225,7 @@ async function getTime(attempts = 0, previous = null) {
  */
 async function getAgain(attempts = 0, previous = null) {
     if (attempts) {
-        console.log(`    "${again}" is not a valid response.`)
+        console.log(`    "${previous}" is not a valid response.`)
 
         if (attempts === MAX_FAILED_ATTEMPTS) {
             console.log("    You failed to enter a valid response.");
