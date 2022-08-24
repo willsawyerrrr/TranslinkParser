@@ -76,7 +76,7 @@ export async function getStaticData() {
 
         let stopTimes = await readFile("static/stop_times.txt");
         let parsedStopTimes = parseStopTimes(stopTimes.toString());
-        return filterStopTimes(parsedStopTimes);
+        return filterStopTimes(parsedStopTimes, stops);
     }
 
     /**
@@ -112,7 +112,7 @@ export async function getStaticData() {
 
         let trips = await readFile("static/trips.txt");
         let parsedTrips = parseTrips(trips.toString());
-        return filterCalendarDates(parsedTrips);
+        return filterCalendarDates(parsedTrips, stopTimes);
     }
 
     /**
@@ -148,7 +148,7 @@ export async function getStaticData() {
 
         let calendarDates = await readFile("static/calendar_dates.txt");
         let parsedCalendarDates = parseCalendarDates(calendarDates.toString());
-        return filterCalendarDates(parsedCalendarDates);
+        return filterCalendarDates(parsedCalendarDates, trips);
     }
 
     /**
@@ -184,7 +184,7 @@ export async function getStaticData() {
 
         let calendar = await readFile("static/calendar.txt");
         let parsedCalendar = parseCalendar(calendar.toString());
-        return filterCalendar(parsedCalendar);
+        return filterCalendar(parsedCalendar, trips);
     }
 
     /**
@@ -220,7 +220,7 @@ export async function getStaticData() {
 
         let routes = await readFile("static/routes.txt");
         let parsedRoutes = parseRoutes(routes.toString());
-        return filterRoutes(parsedRoutes);
+        return filterRoutes(parsedRoutes, trips);
     }
 
     return {
