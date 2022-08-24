@@ -174,9 +174,12 @@ export async function getStaticData() {
 
     /**
      * Gets trips relevant to UQ Lakes Station.
+     * 
+     * @param {array} stopTimes stop times relevant to UQ Lakes Station
+     * 
      * @returns {object} trips relevant to UQ Lakes Station
      */
-    async function getTrips() {
+    async function getTrips(stopTimes) {
         /**
          * Parses a CSV string into an object.
          * 
@@ -191,11 +194,13 @@ export async function getStaticData() {
          * Filters trips to those relevant to UQ Lakes Station.
          * 
          * @param {array} trips all trips from the static data
+         * @param {array} stopTimes stop times relevant to UQ Lakes Station
          * 
          * @returns {object} trips relevant to UQ Lakes Station
          */
-        function filterCalendarDates(trips) {
-            return trips.filter(trip => true);
+        function filterCalendarDates(trips, stopTimes) {
+            let tripIds = stopTimes.map(stopTime => stopTime.trip_id);
+            return trips.filter(trip => tripIds.includes(trip.trip_id));
         }
 
         let trips = await readFile("static/trips.txt");
@@ -209,6 +214,6 @@ export async function getStaticData() {
         routes: await getRoutes(),
         stops: await getStops(),
         stopTimes: await getStopTimes(stops),
-        trips: await getTrips()
+        trips: await getTrips(stopTimes)
     };
 }
