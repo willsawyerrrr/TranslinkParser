@@ -2,6 +2,8 @@ import fetch from "node-fetch";
 import fs from "fs";
 
 
+const API_DOMAIN = "http://127.0.0.1:5343/gtfs/seq/";
+
 /**
  * Gets data from the API.
  * 
@@ -13,7 +15,7 @@ async function getApiData() {
      * @returns {object} alerts relevant to UQ Lakes Station
      */
     async function getAlerts() {
-        let response = await fetch("http://127.0.0.1:5343/gtfs/seq/alerts.json");
+        let response = await fetch(API_DOMAIN + "alerts.json");
         let data = await response.json();
         let entity = data.entity;
 
@@ -36,7 +38,7 @@ async function getApiData() {
      * @returns {object} trip updates relevant to UQ Lakes Station
      */
     async function getTripUpdates() {
-        let response = await fetch("http://127.0.0.1:5343/gtfs/seq/trip_updates.json");
+        let response = await fetch(API_DOMAIN + "trip_updates.json");
         let data = await response.json();
         let entity = data.entity;
 
@@ -59,7 +61,7 @@ async function getApiData() {
      * @returns {object} vehicle positions relevant to UQ Lakes Station
      */
     async function getVehiclePositions() {
-        let response = await fetch("http://127.0.0.1:5343/gtfs/seq/vehicle_positions.json");
+        let response = await fetch(API_DOMAIN + "vehicle_positions.json");
         let data = await response.json();
         let entity = data.entity;
 
