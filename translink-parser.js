@@ -1,4 +1,5 @@
 import { main as retrieveApiData } from "./api.js";
+import { getStaticData } from "./static.js";
 import promptSync from "prompt-sync";
 const prompt = promptSync({ sigint: true });
 
@@ -223,6 +224,9 @@ function getAgain(attempts = 0, previous = null) {
 
     return getAgain(++attempts, again);
 }
+
+let staticData = await getStaticData();
+let { calendarDates, calendar, routes, shapes, stopTimes, stops, trips } = staticData;
 
 retrieveApiData();
 setInterval(retrieveApiData, 300000);
