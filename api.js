@@ -7,12 +7,13 @@ const API_DOMAIN = "http://127.0.0.1:5343/gtfs/seq/";
 /**
  * Gets data from the API.
  * 
- * @returns {Promise} Promise that resolves to an array of three objects: alerts, trip updates, and vehicle positions.
+ * @returns {Promise} Promise that resolves to an array of three arrays: alerts, trip updates, and vehicle positions.
  */
 async function getApiData() {
     /**
      * Gets alerts relevant to UQ Lakes Station.
-     * @returns {object} alerts relevant to UQ Lakes Station
+     * 
+     * @returns {array} alerts relevant to UQ Lakes Station
      */
     async function getAlerts() {
         let response = await fetch(API_DOMAIN + "alerts.json");
@@ -22,9 +23,9 @@ async function getApiData() {
         /**
          * Filters alerts to those relevant to UQ Lakes Station.
          * 
-         * @param {object} alerts all alerts from the API
+         * @param {array} alerts all alerts from the API
          * 
-         * @returns {object} alerts relevant to UQ Lakes Station
+         * @returns {array} alerts relevant to UQ Lakes Station
          */
         function filterAlerts(alerts) {
             return alerts.filter(alert => true);
@@ -35,7 +36,7 @@ async function getApiData() {
 
     /**
      * Gets trip updates relevant to UQ Lakes Station.
-     * @returns {object} trip updates relevant to UQ Lakes Station
+     * @returns {array} trip updates relevant to UQ Lakes Station
      */
     async function getTripUpdates() {
         let response = await fetch(API_DOMAIN + "trip_updates.json");
@@ -45,9 +46,9 @@ async function getApiData() {
         /**
          * Filters trip updates to those relevant to UQ Lakes Station.
          * 
-         * @param {object} alerts all trip updates from the API
+         * @param {array} alerts all trip updates from the API
          * 
-         * @returns {object} trip updates relevant to UQ Lakes Station
+         * @returns {array} trip updates relevant to UQ Lakes Station
          */
         function filterTripUpdates(tripUpdates) {
             return tripUpdates.filter(tripUpdate => true);
@@ -58,7 +59,7 @@ async function getApiData() {
 
     /**
      * Gets vehicle positions relevant to UQ Lakes Station.
-     * @returns {object} vehicle positions relevant to UQ Lakes Station
+     * @returns {array} vehicle positions relevant to UQ Lakes Station
      */
     async function getVehiclePositions() {
         let response = await fetch(API_DOMAIN + "vehicle_positions.json");
@@ -68,9 +69,9 @@ async function getApiData() {
         /**
          * Filters vehicle positions to those relevant to UQ Lakes Station.
          * 
-         * @param {object} alerts all vehicle positions from the API
+         * @param {array} alerts all vehicle positions from the API
          * 
-         * @returns {object} vehicle positions relevant to UQ Lakes Station
+         * @returns {array} vehicle positions relevant to UQ Lakes Station
          */
         function filterVehiclePositions(vehiclePositions) {
             return vehiclePositions.filter(vehiclePosition => true);

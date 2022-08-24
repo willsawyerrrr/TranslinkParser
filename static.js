@@ -30,7 +30,7 @@ export async function getStaticData() {
         /**
          * Filters calendar dates to those relevant to UQ Lakes Station.
          * 
-         * @param {object} calendarDates all calendar dates from the static data
+         * @param {array} calendarDates all calendar dates from the static data
          * 
          * @returns {object} calendar dates relevant to UQ Lakes Station
          */
@@ -61,7 +61,7 @@ export async function getStaticData() {
         /**
          * Filters calendar to those relevant to UQ Lakes Station.
          * 
-         * @param {object} calendar all calendar from the static data
+         * @param {array} calendar all calendar from the static data
          * 
          * @returns {object} calendar relevant to UQ Lakes Station
          */
@@ -92,7 +92,7 @@ export async function getStaticData() {
         /**
          * Filters routes to those relevant to UQ Lakes Station.
          * 
-         * @param {object} routes all routes from the static data
+         * @param {array} routes all routes from the static data
          * 
          * @returns {object} routes relevant to UQ Lakes Station
          */
@@ -123,7 +123,7 @@ export async function getStaticData() {
         /**
          * Filters stop times to those relevant to UQ Lakes Station.
          * 
-         * @param {object} stopTimes all stop times from the static data
+         * @param {array} stopTimes all stop times from the static data
          * 
          * @returns {object} stop times relevant to UQ Lakes Station
          */
@@ -154,7 +154,7 @@ export async function getStaticData() {
         /**
          * Filters stops to those relevant to UQ Lakes Station.
          * 
-         * @param {object} stops all stops from the static data
+         * @param {array} stops all stops from the static data
          * 
          * @returns {object} stops relevant to UQ Lakes Station
          */
@@ -185,7 +185,7 @@ export async function getStaticData() {
         /**
          * Filters trips to those relevant to UQ Lakes Station.
          * 
-         * @param {object} trips all trips from the static data
+         * @param {array} trips all trips from the static data
          * 
          * @returns {object} trips relevant to UQ Lakes Station
          */
