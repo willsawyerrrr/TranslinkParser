@@ -13,37 +13,6 @@ export async function getStaticData() {
     }
 
     /**
-     * Gets routes relevant to UQ Lakes Station.
-     * @returns {object} routes relevant to UQ Lakes Station
-     */
-    async function getRoutes() {
-        /**
-         * Parses a CSV string into an object.
-         * 
-         * @param {string} routes CSV string
-         */
-        function parseRoutes(routes) {
-            let options = getParseOptions();
-            return parse(routes, options)
-        }
-
-        /**
-         * Filters routes to those relevant to UQ Lakes Station.
-         * 
-         * @param {array} routes all routes from the static data
-         * 
-         * @returns {object} routes relevant to UQ Lakes Station
-         */
-        function filterRoutes(routes) {
-            return routes.filter(route => true);
-        }
-
-        let routes = await readFile("static/routes.txt");
-        let parsedRoutes = parseRoutes(routes.toString());
-        return filterRoutes(parsedRoutes);
-    }
-
-    /**
      * Gets stops relevant to UQ Lakes Station.
      * @returns {object} stops relevant to UQ Lakes Station
      */
@@ -218,12 +187,48 @@ export async function getStaticData() {
         return filterCalendar(parsedCalendar);
     }
 
+    /**
+     * Gets routes relevant to UQ Lakes Station.
+     * 
+     * @param {array} trips trips relevant to UQ Lakes Station
+     * 
+     * @returns {object} routes relevant to UQ Lakes Station
+     */
+    async function getRoutes(trips) {
+        /**
+         * Parses a CSV string into an object.
+         * 
+         * @param {string} routes CSV string
+         */
+        function parseRoutes(routes) {
+            let options = getParseOptions();
+            return parse(routes, options)
+        }
+
+        /**
+         * Filters routes to those relevant to UQ Lakes Station.
+         * 
+         * @param {array} routes all routes from the static data
+         * @param {array} trips trips relevant to UQ Lakes Station
+         * 
+         * @returns {object} routes relevant to UQ Lakes Station
+         */
+        function filterRoutes(routes, trips) {
+            let routeIds = trips.map(trip => trip.route_id);
+            return routes.filter(route => routeIds.includes(route.route_id));
+        }
+
+        let routes = await readFile("static/routes.txt");
+        let parsedRoutes = parseRoutes(routes.toString());
+        return filterRoutes(parsedRoutes);
+    }
+
     return {
-        routes: await getRoutes(),
         stops: await getStops(),
         stopTimes: await getStopTimes(stops),
         trips: await getTrips(stopTimes),
         calendarDates: await getCalendarDates(trips),
-        calendar: await getCalendar(trips)
+        calendar: await getCalendar(trips),
+        routes: await getRoutes(trips)
     };
 }
