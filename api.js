@@ -115,5 +115,3 @@ export async function main() {
 
     return [alerts, tripUpdates, vehiclePositions];
 }
-
-main();
