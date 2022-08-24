@@ -8,9 +8,8 @@ prompt.colors = false;
 
 const MAX_FAILED_ATTEMPTS = 4;
 
-let calendarDates, calendar, routes,
-    shapes, stopTimes, stops, trips,
-    alerts, tripUpdates, vehiclePositions;
+let alerts, calendarDates, calendar, routes, stops,
+    stopTimes, trips, tripUpdates, vehiclePositions;
 
 /**
  * Main program loop.
