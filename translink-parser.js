@@ -43,6 +43,71 @@ function main(welcome = true) {
  * @returns {object} date object with year, month and day properties
  */
 function getDate(attempts = 0, previous = null) {
+    /**
+     * Determines whether the given string represents a valid date.
+     * 
+     * @param {string} date date string to validate
+     * 
+     * @returns {boolean} `true` if the date string is valid; `false` otherwise
+     */
+    function validateDate(date) {
+        /**
+         * Determines whether the given string is of the correct format.
+         */
+        let validateDateFormat = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date);
+
+        /**
+         * Validates whether the given day is valid for the given month.
+         * 
+         * @param {number} month month number
+         * @param {number} day day number
+         * 
+         * @returns `true` if the day is valid for the given month; `false` otherwise
+         */
+        function validateDay(month, day) {
+            if (day < 1) {
+                return false;
+            }
+
+            switch (month) {
+                case 1:
+                case 3:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    return day <= 31;
+                case 4:
+                case 6:
+                case 9:
+                case 11:
+                    return day <= 30;
+                case 2:
+                    return day <= 28;
+                default:
+                    return false;
+            }
+        }
+
+        /**
+         * Determines whether each component of the given date string is valid.
+         * 
+         * @param {string[]} components components of the date string
+         * 
+         * @returns {boolean} `true` if the components are valid; `false` otherwise
+         */
+        function validateDateComponents(components) {
+            let integerComponents = components.map(component => parseInt(component));
+            let [year, month, day] = integerComponents;
+            return year > 2020
+                && month >= 1 && month <= 12
+                && validateDay(month, day);
+        }
+
+        return validateDateFormat(date) && validateDateComponents(date.split("-"));
+    }
+
     if (attempts) {
         console.log(`    "${previous}" is not a valid date.`)
 
@@ -77,6 +142,36 @@ function getDate(attempts = 0, previous = null) {
  * @returns {object} time object with hour and minute properties
  */
 function getTime(attempts = 0, previous = null) {
+    /**
+     * Determines whether the given string represents a valid time.
+     * 
+     * @param {string} time time string to validate
+     * 
+     * @returns {boolean} `true` if the time string is valid; `false` otherwise
+     */
+    function validateTime(time) {
+        /**
+         * Determines whether the given string is of the correct format.
+         */
+        let validateTimeFormat = (time) => /^\d{2}:\d{2}$/.test(time);
+
+        /**
+         * Determines whether each component of the given time string is valid.
+         * 
+         * @param {string[]} components components of the time string
+         * 
+         * @returns {boolean} `true` if the components are valid; `false` otherwise
+         */
+        function validateTimeComponents(components) {
+            let integerComponents = components.map(component => parseInt(component));
+            let [hour, minute] = integerComponents;
+            return hour >= 0 && hour <= 23
+                && minute >= 0 && minute <= 59;
+        }
+
+        return validateTimeFormat(time) && validateTimeComponents(time.split(":"));
+    }
+
     if (attempts) {
         console.log(`    "${previous}" is not a valid time.`)
 
@@ -98,103 +193,6 @@ function getTime(attempts = 0, previous = null) {
     }
 
     return getTime(++attempts, time);
-}
-
-
-/**
- * Determines whether the given string represents a valid date.
- * 
- * @param {string} date date string to validate
- * 
- * @returns {boolean} `true` if the date string is valid; `false` otherwise
- */
-function validateDate(date) {
-    /**
-     * Determines whether the given string is of the correct format.
-     */
-    let validateDateFormat = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date);
-
-    /**
-     * Validates whether the given day is valid for the given month.
-     * 
-     * @param {number} month month number
-     * @param {number} day day number
-     * 
-     * @returns `true` if the day is valid for the given month; `false` otherwise
-     */
-    function validateDay(month, day) {
-        if (day < 1) {
-            return false;
-        }
-
-        switch (month) {
-            case 1:
-            case 3:
-            case 5:
-            case 7:
-            case 8:
-            case 10:
-            case 12:
-                return day <= 31;
-            case 4:
-            case 6:
-            case 9:
-            case 11:
-                return day <= 30;
-            case 2:
-                return day <= 28;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Determines whether each component of the given date string is valid.
-     * 
-     * @param {string[]} components components of the date string
-     * 
-     * @returns {boolean} `true` if the components are valid; `false` otherwise
-     */
-    function validateDateComponents(components) {
-        let integerComponents = components.map(component => parseInt(component));
-        let [year, month, day] = integerComponents;
-        return year > 2020
-            && month >= 1 && month <= 12
-            && validateDay(month, day);
-    }
-
-    return validateDateFormat(date) && validateDateComponents(date.split("-"));
-}
-
-
-/**
- * Determines whether the given string represents a valid time.
- * 
- * @param {string} time time string to validate
- * 
- * @returns {boolean} `true` if the time string is valid; `false` otherwise
- */
-function validateTime(time) {
-    /**
-     * Determines whether the given string is of the correct format.
-     */
-    let validateTimeFormat = (time) => /^\d{2}:\d{2}$/.test(time);
-
-    /**
-     * Determines whether each component of the given time string is valid.
-     * 
-     * @param {string[]} components components of the time string
-     * 
-     * @returns {boolean} `true` if the components are valid; `false` otherwise
-     */
-    function validateTimeComponents(components) {
-        let integerComponents = components.map(component => parseInt(component));
-        let [hour, minute] = integerComponents;
-        return hour >= 0 && hour <= 23
-            && minute >= 0 && minute <= 59;
-    }
-
-    return validateTimeFormat(time) && validateTimeComponents(time.split(":"));
 }
 
 
