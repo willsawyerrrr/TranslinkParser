@@ -13,68 +13,6 @@ export async function getStaticData() {
     }
 
     /**
-     * Gets calendar dates relevant to UQ Lakes Station.
-     * @returns {object} calendar dates relevant to UQ Lakes Station
-     */
-    async function getCalendarDates() {
-        /**
-         * Parses a CSV string into an object.
-         * 
-         * @param {string} calendarDates CSV string
-         */
-        function parseCalendarDates(calendarDates) {
-            let options = getParseOptions();
-            return parse(calendarDates, options)
-        }
-
-        /**
-         * Filters calendar dates to those relevant to UQ Lakes Station.
-         * 
-         * @param {array} calendarDates all calendar dates from the static data
-         * 
-         * @returns {object} calendar dates relevant to UQ Lakes Station
-         */
-        function filterCalendarDates(calendarDates) {
-            return calendarDates.filter(calendarDate => true);
-        }
-
-        let calendarDates = await readFile("static/calendar_dates.txt");
-        let parsedCalendarDates = parseCalendarDates(calendarDates.toString());
-        return filterCalendarDates(parsedCalendarDates);
-    }
-
-    /**
-     * Gets calendar relevant to UQ Lakes Station.
-     * @returns {object} calendar relevant to UQ Lakes Station
-     */
-    async function getCalendar() {
-        /**
-         * Parses a CSV string into an object.
-         * 
-         * @param {string} calendar CSV string
-         */
-        function parseCalendar(calendar) {
-            let options = getParseOptions();
-            return parse(calendar, options)
-        }
-
-        /**
-         * Filters calendar to those relevant to UQ Lakes Station.
-         * 
-         * @param {array} calendar all calendar from the static data
-         * 
-         * @returns {object} calendar relevant to UQ Lakes Station
-         */
-        function filterCalendar(calendar) {
-            return calendar.filter(calendarEntry => true);
-        }
-
-        let calendar = await readFile("static/calendar.txt");
-        let parsedCalendar = parseCalendar(calendar.toString());
-        return filterCalendar(parsedCalendar);
-    }
-
-    /**
      * Gets routes relevant to UQ Lakes Station.
      * @returns {object} routes relevant to UQ Lakes Station
      */
@@ -208,12 +146,84 @@ export async function getStaticData() {
         return filterCalendarDates(parsedTrips);
     }
 
+    /**
+     * Gets calendar dates relevant to UQ Lakes Station.
+     * 
+     * @param {array} trips trips relevant to UQ Lakes Station
+     * 
+     * @returns {object} calendar dates relevant to UQ Lakes Station
+     */
+    async function getCalendarDates(trips) {
+        /**
+         * Parses a CSV string into an object.
+         * 
+         * @param {string} calendarDates CSV string
+         */
+        function parseCalendarDates(calendarDates) {
+            let options = getParseOptions();
+            return parse(calendarDates, options)
+        }
+
+        /**
+         * Filters calendar dates to those relevant to UQ Lakes Station.
+         * 
+         * @param {array} calendarDates all calendar dates from the static data
+         * @param {array} trips trips relevant to UQ Lakes Station
+         * 
+         * @returns {object} calendar dates relevant to UQ Lakes Station
+         */
+        function filterCalendarDates(calendarDates, trips) {
+            let serviceIds = trips.map(trip => trip.trip_id);
+            return calendarDates.filter(date => serviceIds.includes(date.service_id));
+        }
+
+        let calendarDates = await readFile("static/calendar_dates.txt");
+        let parsedCalendarDates = parseCalendarDates(calendarDates.toString());
+        return filterCalendarDates(parsedCalendarDates);
+    }
+
+    /**
+     * Gets calendar relevant to UQ Lakes Station.
+     * 
+     * @param {array} trips trips relevant to UQ Lakes Station
+     * 
+     * @returns {object} calendar relevant to UQ Lakes Station
+     */
+    async function getCalendar(trips) {
+        /**
+         * Parses a CSV string into an object.
+         * 
+         * @param {string} calendar CSV string
+         */
+        function parseCalendar(calendar) {
+            let options = getParseOptions();
+            return parse(calendar, options)
+        }
+
+        /**
+         * Filters calendar to those relevant to UQ Lakes Station.
+         * 
+         * @param {array} calendar all services from the static data
+         * @param {array} trips trips relevant to UQ Lakes Station
+         * 
+         * @returns {object} calendar relevant to UQ Lakes Station
+         */
+        function filterCalendar(calendar, trips) {
+            let serviceIds = trips.map(trip => trip.trip_id);
+            return calendar.filter(service => serviceIds.includes(service.service_id));
+        }
+
+        let calendar = await readFile("static/calendar.txt");
+        let parsedCalendar = parseCalendar(calendar.toString());
+        return filterCalendar(parsedCalendar);
+    }
+
     return {
-        calendarDates: await getCalendarDates(),
-        calendar: await getCalendar(),
         routes: await getRoutes(),
         stops: await getStops(),
         stopTimes: await getStopTimes(stops),
-        trips: await getTrips(stopTimes)
+        trips: await getTrips(stopTimes),
+        calendarDates: await getCalendarDates(trips),
+        calendar: await getCalendar(trips)
     };
 }
