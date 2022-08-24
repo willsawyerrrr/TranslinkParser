@@ -248,7 +248,7 @@ async function getAgain(attempts = 0, previous = null) {
 }
 
 let staticData = await getStaticData();
-({ routes, shapes, stops, stopTimes, trips, calendarDates, calendar } = staticData);
+({ routes, stops, stopTimes, trips, calendarDates, calendar } = staticData);
 
 let apiData = await retrieveApiData();
 ([alerts, tripUpdates, vehiclePositions] = apiData);
