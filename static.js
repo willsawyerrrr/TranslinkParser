@@ -142,7 +142,7 @@ export async function getStaticData() {
          * @returns {object} calendar dates relevant to UQ Lakes Station
          */
         function filterCalendarDates(calendarDates, trips) {
-            let serviceIds = trips.map(trip => trip.trip_id);
+            let serviceIds = trips.map(trip => trip.service_id);
             return calendarDates.filter(date => serviceIds.includes(date.service_id));
         }
 
@@ -178,7 +178,7 @@ export async function getStaticData() {
          * @returns {object} calendar relevant to UQ Lakes Station
          */
         function filterCalendar(calendar, trips) {
-            let serviceIds = trips.map(trip => trip.trip_id);
+            let serviceIds = trips.map(trip => trip.service_id);
             return calendar.filter(service => serviceIds.includes(service.service_id));
         }
 
