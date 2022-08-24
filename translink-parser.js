@@ -5,6 +5,10 @@ const prompt = promptSync({ sigint: true });
 
 const MAX_FAILED_ATTEMPTS = 4;
 
+let calendarDates, calendar, routes,
+    shapes, stopTimes, stops, trips,
+    alerts, tripUpdates, vehiclePositions;
+
 /**
  * Main program loop.
  * 
@@ -226,9 +230,14 @@ function getAgain(attempts = 0, previous = null) {
 }
 
 let staticData = await getStaticData();
-let { calendarDates, calendar, routes, shapes, stopTimes, stops, trips } = staticData;
+({ calendarDates, calendar, routes, shapes, stopTimes, stops, trips } = staticData);
 
-retrieveApiData();
-setInterval(retrieveApiData, 300000);
+let apiData = await retrieveApiData();
+([alerts, tripUpdates, vehiclePositions] = apiData);
+
+setInterval(async () => {
+    let apiData = await retrieveApiData();
+    ([alerts, tripUpdates, vehiclePositions] = apiData);
+}, 300000);
 
 main();

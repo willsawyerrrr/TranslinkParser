@@ -112,6 +112,8 @@ export async function main() {
     let data = await getApiData();
     let [alerts, tripUpdates, vehiclePositions] = data;
     writeApiData(alerts, tripUpdates, vehiclePositions);
+
+    return [alerts, tripUpdates, vehiclePositions];
 }
 
 main();
