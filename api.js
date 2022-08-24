@@ -92,12 +92,7 @@ async function getApiData() {
  */
 async function writeApiData(alerts, tripUpdates, vehiclePositions) {
     /** Callback function used to log errors. */
-    const logError = (error) => {
-        if (error) {
-            console.log(error);
-        }
-        console.log('done');
-    };
+    const logError = (error) => { if (error) console.log(error); };
 
     /** Writes the entity to a local cached file. */
     async function writeApiDataHelper(filename, entity) {
