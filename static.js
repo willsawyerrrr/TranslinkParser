@@ -1,6 +1,8 @@
 import { readFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
 
+export let UQ_LAKES_STOP_ID;
+
 
 export async function getStaticData() {
     /**
@@ -35,12 +37,15 @@ export async function getStaticData() {
          * @returns {object} stops relevant to UQ Lakes Station
          */
         function filterStops(stops) {
-            return stops.filter(stop => /\.*UQ Lakes\.*/.test(stop.stop_name));
+            return stops.filter(stop => /\.*UQ Lakes station\.*/.test(stop.stop_name)
+                && /\d/.test(stop.stop_id));
         }
 
         let stops = await readFile("static/stops.txt");
         let parsedStops = parseStops(stops.toString());
-        return filterStops(parsedStops);
+        let result = filterStops(parsedStops);
+        UQ_LAKES_STOP_ID = result[0].stop_id;
+        return result;
     }
 
     /**
