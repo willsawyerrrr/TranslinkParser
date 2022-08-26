@@ -97,7 +97,7 @@ async function writeApiData(alerts, tripUpdates, vehiclePositions) {
 
     /** Writes the entity to a local cached file. */
     async function writeApiDataHelper(filename, entity) {
-        await fs.writeFile(`cache/${filename}.json`,
+        await fs.writeFile(`cached-data/${filename}.json`,
             JSON.stringify(entity, null, 4),
             logError
         );

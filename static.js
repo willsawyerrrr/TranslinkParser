@@ -41,7 +41,7 @@ export async function getStaticData() {
                 && /\d/.test(stop.stop_id));
         }
 
-        let stops = await readFile("static/stops.txt");
+        let stops = await readFile("static-data/stops.txt");
         let parsedStops = parseStops(stops.toString());
         let result = filterStops(parsedStops);
         UQ_LAKES_STOP_ID = result[0].stop_id;
@@ -79,7 +79,7 @@ export async function getStaticData() {
             return stopTimes.filter(stopTime => stopIds.includes(stopTime.stop_id));
         }
 
-        let stopTimes = await readFile("static/stop_times.txt");
+        let stopTimes = await readFile("static-data/stop_times.txt");
         let parsedStopTimes = parseStopTimes(stopTimes.toString());
         return filterStopTimes(parsedStopTimes, stops);
     }
@@ -115,7 +115,7 @@ export async function getStaticData() {
             return trips.filter(trip => tripIds.includes(trip.trip_id));
         }
 
-        let trips = await readFile("static/trips.txt");
+        let trips = await readFile("static-data/trips.txt");
         let parsedTrips = parseTrips(trips.toString());
         return filterTrips(parsedTrips, stopTimes);
     }
@@ -151,7 +151,7 @@ export async function getStaticData() {
             return calendarDates.filter(date => serviceIds.includes(date.service_id));
         }
 
-        let calendarDates = await readFile("static/calendar_dates.txt");
+        let calendarDates = await readFile("static-data/calendar_dates.txt");
         let parsedCalendarDates = parseCalendarDates(calendarDates.toString());
         return filterCalendarDates(parsedCalendarDates, trips);
     }
@@ -187,7 +187,7 @@ export async function getStaticData() {
             return calendar.filter(service => serviceIds.includes(service.service_id));
         }
 
-        let calendar = await readFile("static/calendar.txt");
+        let calendar = await readFile("static-data/calendar.txt");
         let parsedCalendar = parseCalendar(calendar.toString());
         return filterCalendar(parsedCalendar, trips);
     }
@@ -223,7 +223,7 @@ export async function getStaticData() {
             return routes.filter(route => routeIds.includes(route.route_id));
         }
 
-        let routes = await readFile("static/routes.txt");
+        let routes = await readFile("static-data/routes.txt");
         let parsedRoutes = parseRoutes(routes.toString());
         return filterRoutes(parsedRoutes, trips);
     }
