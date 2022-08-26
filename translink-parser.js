@@ -1,5 +1,5 @@
 import { main as retrieveApiData } from "./api.js";
-import { getStaticData } from "./static.js";
+import { getStaticData, UQ_LAKES_STOP_ID } from "./static.js";
 
 import prompt from "prompt";
 prompt.message = "";
@@ -297,17 +297,9 @@ function filterStaticData(date, time) {
                 "Route Short Name": route.route_short_name,
                 "Route Long Name": route.route_long_name,
                 "Service ID": trip.service_id,
+                "Trip ID": trip.trip_id,
                 "Headsign": trip.trip_headsign,
-                "Scheduled Arrival Time": parseTime(stop.arrival_time),
-                // TODO: get from live data
-                "Live Arrival Time": {
-                    hour: null,
-                    minute: null
-                },
-                "Live Position": {
-                    latitude: null,
-                    longitude: null
-                }
+                "Scheduled Arrival Time": parseTime(stop.arrival_time)
             }
         );
     }
@@ -318,10 +310,7 @@ function filterStaticData(date, time) {
     return result.map(arrival => (
         {
             ...arrival,
-            "Scheduled Arrival Time": `${arrival["Scheduled Arrival Time"].hour.toString().padStart(2, '0')}:${arrival["Scheduled Arrival Time"].minute.toString().padStart(2, '0')}`,
-            // TODO: uncomment when live data is available
-            // Live Arrival Time: `${arrival["Live Arrival Time"].hour.toString().padStart(2, '0')}:${arrival["Live Arrival Time"].minute.toString().padStart(2, '0')}`
-            // Live Position: `${arrival["Live Arrival Position"].latitude}:${arrival["Live Arrival Position"].longitude}`
+            "Scheduled Arrival Time": `${arrival["Scheduled Arrival Time"].hour.toString().padStart(2, '0')}:${arrival["Scheduled Arrival Time"].minute.toString().padStart(2, '0')}`
         }
     ));
 }
@@ -331,9 +320,43 @@ function filterStaticData(date, time) {
  * Incorporates live data into the given static data.
  * 
  * @param {object[]} filteredStaticData information on relevant buses
+ * 
+ * @returns {object[]} information on relevant buses, including live data
  */
 function incorporateApiData(filteredStaticData) {
-    return filteredStaticData;
+    return filteredStaticData.map(arrival => {
+        let baseUpdate = tripUpdates.find(update => update.tripUpdate.trip.tripId === arrival["Trip ID"]);
+        let arrivalTime;
+        if (baseUpdate) {
+            let stopTimeUpdate = baseUpdate.tripUpdate.stopTimeUpdate.find(update => update.stopId === UQ_LAKES_STOP_ID);
+            arrivalTime = new Date(parseInt(stopTimeUpdate.arrival.time));
+        } else {
+            arrivalTime = null;
+        }
+
+        let positionUpdate = vehiclePositions.find(position => position.vehicle.trip.tripId === arrival["Trip ID"]);
+
+        return {
+            ...arrival,
+            "Live Arrival Time": arrivalTime == null ? arrivalTime : {
+                hour: arrivalTime.getHours(),
+                minute: arrivalTime.getMinutes()
+            },
+            "Live Position": positionUpdate == undefined ? null : {
+                latitude: positionUpdate.vehicle.position.latitude,
+                longitude: positionUpdate.vehicle.position.longitude
+            }
+        };
+    }).map(arrival => (
+        {
+            ...arrival,
+            "Live Arrival Time": arrival["Live Arrival Time"] == null ? "Not Available" : `${arrival["Live Arrival Time"].hour}:${arrival["Live Arrival Time"].minute}`,
+            "Live Position": arrival["Live Position"] == null ? "Not Available" : `${arrival["Live Position"].latitude}, ${arrival["Live Position"].longitude}`
+        }
+    )).map(arrival => {
+        delete arrival["Trip ID"];
+        return arrival;
+    });
 }
 
 
