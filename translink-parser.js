@@ -294,23 +294,25 @@ function filterStaticData(date, time) {
 
         result.push(
             {
-                "Route Short Name": route.route_short_name,
-                "Route Long Name": route.route_long_name,
-                "Service ID": trip.service_id,
-                "Trip ID": trip.trip_id,
-                "Headsign": trip.trip_headsign,
-                "Scheduled Arrival Time": parseTime(stop.arrival_time)
+                routeShortName: route.route_short_name,
+                routeLongName: route.route_long_name,
+                serviceId: trip.service_id,
+                tripId: trip.trip_id,
+                headsign: trip.trip_headsign,
+                scheduledArrivalTime: parseTime(stop.arrival_time)
             }
         );
     }
 
-    result.sort((a, b) => a["Scheduled Arrival Time"].minute - b["Scheduled Arrival Time"].minute);
-    result.sort((a, b) => a["Scheduled Arrival Time"].hour - b["Scheduled Arrival Time"].hour);
-    // stringify the arrival times
+    // sort by time
+    result.sort((a, b) => a.scheduledArrivalTime.minute - b.scheduledArrivalTime.minute);
+    result.sort((a, b) => a.scheduledArrivalTime.hour - b.scheduledArrivalTime.hour);
+
     return result.map(arrival => (
         {
             ...arrival,
-            "Scheduled Arrival Time": `${arrival["Scheduled Arrival Time"].hour.toString().padStart(2, '0')}:${arrival["Scheduled Arrival Time"].minute.toString().padStart(2, '0')}`
+            // overwrite the arrival time with a string
+            scheduledArrivalTime: `${arrival.scheduledArrivalTime.hour.toString().padStart(2, '0')}:${arrival.scheduledArrivalTime.minute.toString().padStart(2, '0')}`
         }
     ));
 }
@@ -325,7 +327,7 @@ function filterStaticData(date, time) {
  */
 function incorporateApiData(filteredStaticData) {
     return filteredStaticData.map(arrival => {
-        let baseUpdate = tripUpdates.find(update => update.tripUpdate.trip.tripId === arrival["Trip ID"]);
+        let baseUpdate = tripUpdates.find(update => update.tripUpdate.trip.tripId === arrival.tripId);
         let arrivalTime;
         if (baseUpdate) {
             let stopTimeUpdate = baseUpdate.tripUpdate.stopTimeUpdate.find(update => update.stopId === UQ_LAKES_STOP_ID);
@@ -334,15 +336,15 @@ function incorporateApiData(filteredStaticData) {
             arrivalTime = null;
         }
 
-        let positionUpdate = vehiclePositions.find(position => position.vehicle.trip.tripId === arrival["Trip ID"]);
+        let positionUpdate = vehiclePositions.find(position => position.vehicle.trip.tripId === arrival.tripId);
 
         return {
             ...arrival,
-            "Live Arrival Time": arrivalTime == null ? arrivalTime : {
+            liveArrivalTime: arrivalTime == null ? arrivalTime : {
                 hour: arrivalTime.getHours(),
                 minute: arrivalTime.getMinutes()
             },
-            "Live Position": positionUpdate == undefined ? null : {
+            livePosition: positionUpdate == undefined ? null : {
                 latitude: positionUpdate.vehicle.position.latitude,
                 longitude: positionUpdate.vehicle.position.longitude
             }
@@ -350,13 +352,24 @@ function incorporateApiData(filteredStaticData) {
     }).map(arrival => (
         {
             ...arrival,
-            "Live Arrival Time": arrival["Live Arrival Time"] == null ? "Not Available" : `${arrival["Live Arrival Time"].hour}:${arrival["Live Arrival Time"].minute}`,
-            "Live Position": arrival["Live Position"] == null ? "Not Available" : `${arrival["Live Position"].latitude}, ${arrival["Live Position"].longitude}`
+            liveArrivalTime: arrival.liveArrivalTime == null
+                ? "Not Available"
+                : `${arrival.liveArrivalTime.hour}:${arrival.liveArrivalTime.minute}`,
+            livePosition: arrival.livePosition == null
+                ? "Not Available"
+                : `${arrival.livePosition.latitude}, ${arrival.livePosition.longitude}`
         }
-    )).map(arrival => {
-        delete arrival["Trip ID"];
-        return arrival;
-    });
+    )).map(arrival => (
+        {
+            "Route Short Name": arrival.routeShortName,
+            "Route Long Name": arrival.routeLongName,
+            "Service ID": arrival.serviceId,
+            "Headsign": arrival.headsign,
+            "Scheduled Arrival Time": arrival.scheduledArrivalTime,
+            "Live Arrival Time": arrival.liveArrivalTime,
+            "Live Position": arrival.livePosition
+        }
+    ));
 }
 
 
