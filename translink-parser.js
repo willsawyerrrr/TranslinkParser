@@ -25,7 +25,10 @@ async function main(welcome = true) {
     let time = await getTime();
 
     // filter data
+    let filteredStaticData = filterStaticData(date, time);
+    let output = incorporateApiData(filteredStaticData);
     // output data
+    console.table(output);
 
     if (await getAgain()) {
         await main(false);
@@ -211,6 +214,126 @@ async function getTime(attempts = 0, previous = null) {
     }
 
     return await getTime(++attempts, time);
+}
+
+
+/**
+ * Filters the static data to only include buses that arrive within 10 minutes
+ * of the given time.
+ * 
+ * The format of the objects in the returned array is:
+ *  {
+ *      routeShortName: string,
+ *      routeLongName: string,
+ *      serviceId: string,
+ *      headsign: string,
+ *      scheduledArrival: {
+ *          hour: number,
+ *          minute: number
+ *      },
+ *      liveArrival: {
+ *          hour: number,       // currently null
+ *          minute: number      // currently null
+ *      },
+ *      livePosition: {
+ *          latitude: number,   // currently null
+ *          longitude: number   // currently null
+ *      }
+ *  }
+ * 
+ * @param {object} date date object with year, month and day properties
+ * @param {object} time time object with hour and minute properties
+ * 
+ * @returns {object[]} required data for buses arriving within 10 minutes of the
+ * given time
+ */
+function filterStaticData(date, time) {
+    /**
+     * Parses the given date string into an object with hour and minute
+     * properties.
+     * 
+     * @param {string} time time string in HH-mm format
+     * 
+     * @returns {object} time object with hour and minute properties
+     */
+    function parseTime(time) {
+        return {
+            hour: parseInt(time.substring(0, 2)),
+            minute: parseInt(time.substring(3, 5))
+        };
+    }
+
+    /**
+     * Returns the number of minutes that elapse from `userTime` to `stopTime`.
+     * 
+     * @param {object} userTime time to search from
+     * @param {object} stopTime arrival time of the bus
+     * 
+     * @returns {number} number of minutes that elapse from `userTime` to `stopTime`
+     */
+    function timeDiff(userTime, stopTime) {
+        return (stopTime.hour - userTime.hour) * 60 + (stopTime.minute - userTime.minute);
+    }
+
+    let filteredStopTimes = stopTimes.filter(stopTime => {
+        let arrivalTime = parseTime(stopTime.arrival_time);
+        let diff = timeDiff(time, arrivalTime);
+        return diff >= 0 && diff <= 10;
+    });
+
+    let filteredTripIds = filteredStopTimes.map(stopTime => stopTime.trip_id);
+    let filteredTrips = trips.filter(trip => filteredTripIds.includes(trip.trip_id));
+    let filteredRouteIds = filteredTrips.map(trip => trip.route_id);
+    let filteredRoutes = routes.filter(route => filteredRouteIds.includes(route.route_id));
+
+    let result = [];
+
+    for (let stop of filteredStopTimes) {
+        let trip = filteredTrips.find(trip => trip.trip_id === stop.trip_id);
+        let route = filteredRoutes.find(route => route.route_id === trip.route_id);
+
+        result.push(
+            {
+                "Route Short Name": route.route_short_name,
+                "Route Long Name": route.route_long_name,
+                "Service ID": trip.service_id,
+                "Headsign": trip.trip_headsign,
+                "Scheduled Arrival Time": parseTime(stop.arrival_time),
+                // TODO: get from live data
+                "Live Arrival Time": {
+                    hour: null,
+                    minute: null
+                },
+                "Live Position": {
+                    latitude: null,
+                    longitude: null
+                }
+            }
+        );
+    }
+
+    result.sort((a, b) => a["Scheduled Arrival Time"].minute - b["Scheduled Arrival Time"].minute);
+    result.sort((a, b) => a["Scheduled Arrival Time"].hour - b["Scheduled Arrival Time"].hour);
+    // stringify the arrival times
+    return result.map(arrival => (
+        {
+            ...arrival,
+            "Scheduled Arrival Time": `${arrival["Scheduled Arrival Time"].hour.toString().padStart(2, '0')}:${arrival["Scheduled Arrival Time"].minute.toString().padStart(2, '0')}`,
+            // TODO: uncomment when live data is available
+            // Live Arrival Time: `${arrival["Live Arrival Time"].hour.toString().padStart(2, '0')}:${arrival["Live Arrival Time"].minute.toString().padStart(2, '0')}`
+            // Live Position: `${arrival["Live Arrival Position"].latitude}:${arrival["Live Arrival Position"].longitude}`
+        }
+    ));
+}
+
+
+/**
+ * Incorporates live data into the given static data.
+ * 
+ * @param {object[]} filteredStaticData information on relevant buses
+ */
+function incorporateApiData(filteredStaticData) {
+    return filteredStaticData;
 }
 
 
