@@ -76,9 +76,12 @@ async function getApiData(routes: Array<Route>): Promise<any> {
 
     /**
      * Gets trip updates relevant to UQ Lakes Station.
+     * 
+     * @param {Array<Route>} routes routes relevant to UQ Lakes station
+     * 
      * @returns {Promise<Array<TripUpdate>>} trip updates relevant to UQ Lakes Station
      */
-    async function getTripUpdates(): Promise<Array<TripUpdate>> {
+    async function getTripUpdates(routes: Array<Route>): Promise<Array<TripUpdate>> {
         /**
          * Extracts the trip updates from the API objects.
          * 
@@ -94,11 +97,14 @@ async function getApiData(routes: Array<Route>): Promise<any> {
          * Filters trip updates to those relevant to UQ Lakes Station.
          * 
          * @param {Array<TripUpdate>} tripUpdates all trip updates from the API
+         * @param {Array<Route>} routes routes relevant to UQ Lakes station
          * 
          * @returns {Array<TripUpdate>} trip updates relevant to UQ Lakes Station
          */
-        function filterTripUpdates(tripUpdates: Array<TripUpdate>): Array<TripUpdate> {
-            return tripUpdates.filter(tripUpdate => true);
+        function filterTripUpdates(tripUpdates: Array<TripUpdate>, routes: Array<Route>): Array<TripUpdate> {
+            let routeIds = routes.map(route => route.route_id);
+
+            return tripUpdates.filter(tripUpdate => tripUpdate.trip.routeId && routeIds.includes(tripUpdate.trip.routeId));
         }
 
         let response = await fetch(API_DOMAIN + "trip_updates.json");
@@ -108,7 +114,7 @@ async function getApiData(routes: Array<Route>): Promise<any> {
         let entity = jsonified.entity;
         let tripUpdates = extractTripUpdates(entity);
 
-        return filterTripUpdates(tripUpdates);
+        return filterTripUpdates(tripUpdates, routes);
     }
 
     /**
@@ -149,7 +155,7 @@ async function getApiData(routes: Array<Route>): Promise<any> {
     }
 
     let alerts = await getAlerts(routes);
-    let tripUpdates = await getTripUpdates();
+    let tripUpdates = await getTripUpdates(routes);
     let vehiclePositions = await getVehiclePositions();
 
     return [alerts, tripUpdates, vehiclePositions];
