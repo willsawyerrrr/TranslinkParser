@@ -1,7 +1,6 @@
 import fetch from "node-fetch";
 import fs from "fs";
 import { Alert, TripUpdate, VehiclePosition } from "./gtfs-realtime.js";
-import { Route } from "./gtfs-static.js";
 
 
 const API_DOMAIN = "http://127.0.0.1:5343/gtfs/seq/";
