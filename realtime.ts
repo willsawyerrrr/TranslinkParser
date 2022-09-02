@@ -24,18 +24,20 @@ interface APIVehiclePosition {
 
 /**
  * Gets data from the API.
- * @param {Array<Route>} routes routes relevant to UQ Lakes station
+ * 
+ * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
  * 
  * @returns {Promise<Array<Array<Alert>, Array<TripUpdate>, Array<VehiclePosition>>>} Promise that resolves to an array of three arrays: alerts, trip updates, and vehicle positions.
  */
-async function getApiData(routes: Array<Route>): Promise<any> {
+async function getApiData(routeIds: Array<string>): Promise<any> {
     /**
      * Gets alerts relevant to UQ Lakes Station.
-     * @param {Array<Route>} routes routes relevant to UQ Lakes station
+     * 
+     * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
      * 
      * @returns {Promise<Array<Alert>>} alerts relevant to UQ Lakes Station
      */
-    async function getAlerts(routes: Array<Route>): Promise<Array<Alert>> {
+    async function getAlerts(routeIds: Array<string>): Promise<Array<Alert>> {
         /**
          * Extracts the alerts from the API objects.
          * 
@@ -51,13 +53,11 @@ async function getApiData(routes: Array<Route>): Promise<any> {
          * Filters alerts to those relevant to UQ Lakes Station.
          * 
          * @param {Array<Alert>} alerts all alerts from the API
-         * @param {Array<Route>} routes routes relevant to UQ Lakes station
+         * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
          * 
          * @returns {Array<Alert>} alerts relevant to UQ Lakes Station
          */
-        function filterAlerts(alerts: Array<Alert>, routes: Array<Route>): Array<Alert> {
-            let routeIds = routes.map(route => route.route_id);
-
+        function filterAlerts(alerts: Array<Alert>, routeIds: Array<string>): Array<Alert> {
             return alerts.filter(alert => {
                 let alertRouteIds = alert.informedEntity.map(entity => entity.routeId);
                 return routeIds.some(routeId => alertRouteIds.includes(routeId))
@@ -71,17 +71,17 @@ async function getApiData(routes: Array<Route>): Promise<any> {
         let entity = jsonified.entity;
         let alerts = extractAlerts(entity);
 
-        return filterAlerts(alerts, routes);
+        return filterAlerts(alerts, routeIds);
     }
 
     /**
      * Gets trip updates relevant to UQ Lakes Station.
      * 
-     * @param {Array<Route>} routes routes relevant to UQ Lakes station
+     * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
      * 
      * @returns {Promise<Array<TripUpdate>>} trip updates relevant to UQ Lakes Station
      */
-    async function getTripUpdates(routes: Array<Route>): Promise<Array<TripUpdate>> {
+    async function getTripUpdates(routeIds: Array<string>): Promise<Array<TripUpdate>> {
         /**
          * Extracts the trip updates from the API objects.
          * 
@@ -97,13 +97,11 @@ async function getApiData(routes: Array<Route>): Promise<any> {
          * Filters trip updates to those relevant to UQ Lakes Station.
          * 
          * @param {Array<TripUpdate>} tripUpdates all trip updates from the API
-         * @param {Array<Route>} routes routes relevant to UQ Lakes station
+         * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
          * 
          * @returns {Array<TripUpdate>} trip updates relevant to UQ Lakes Station
          */
-        function filterTripUpdates(tripUpdates: Array<TripUpdate>, routes: Array<Route>): Array<TripUpdate> {
-            let routeIds = routes.map(route => route.route_id);
-
+        function filterTripUpdates(tripUpdates: Array<TripUpdate>, routeIds: Array<string>): Array<TripUpdate> {
             return tripUpdates.filter(tripUpdate => tripUpdate.trip.routeId && routeIds.includes(tripUpdate.trip.routeId));
         }
 
@@ -114,17 +112,17 @@ async function getApiData(routes: Array<Route>): Promise<any> {
         let entity = jsonified.entity;
         let tripUpdates = extractTripUpdates(entity);
 
-        return filterTripUpdates(tripUpdates, routes);
+        return filterTripUpdates(tripUpdates, routeIds);
     }
 
     /**
      * Gets vehicle positions relevant to UQ Lakes Station.
      * 
-     * @param {Array<Route>} routes routes relevant to UQ Lakes station
+     * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
      * 
      * @returns {Promise<Array<VehiclePosition>>} vehicle positions relevant to UQ Lakes Station
      */
-    async function getVehiclePositions(routes: Array<Route>): Promise<Array<VehiclePosition>> {
+    async function getVehiclePositions(routeIds: Array<string>): Promise<Array<VehiclePosition>> {
         /**
          * Extracts the vehicle positions from the API objects.
          * 
@@ -140,13 +138,11 @@ async function getApiData(routes: Array<Route>): Promise<any> {
          * Filters vehicle positions to those relevant to UQ Lakes Station.
          * 
          * @param {Array<VehiclePosition>} vehiclePositions all vehicle positions from the API
-         * @param {Array<Route>} routes routes relevant to UQ Lakes station
+         * @param {Array<string>} routeIds route IDs relevant to UQ Lakes station
          * 
          * @returns {Array<VehiclePosition>} vehicle positions relevant to UQ Lakes Station
          */
-        function filterVehiclePositions(vehiclePositions: Array<VehiclePosition>, routes: Array<Route>): Array<VehiclePosition> {
-            let routeIds = routes.map(route => route.route_id);
-
+        function filterVehiclePositions(vehiclePositions: Array<VehiclePosition>, routeIds: Array<string>): Array<VehiclePosition> {
             return vehiclePositions.filter(vehiclePosition =>
                 vehiclePosition.trip?.routeId
                 && routeIds.includes(vehiclePosition.trip?.routeId)
@@ -160,12 +156,12 @@ async function getApiData(routes: Array<Route>): Promise<any> {
         let entity = jsonified.entity;
         let vehiclePositions = extractVehiclePositions(entity);
 
-        return filterVehiclePositions(vehiclePositions, routes);
+        return filterVehiclePositions(vehiclePositions, routeIds);
     }
 
-    let alerts = await getAlerts(routes);
-    let tripUpdates = await getTripUpdates(routes);
-    let vehiclePositions = await getVehiclePositions(routes);
+    let alerts = await getAlerts(routeIds);
+    let tripUpdates = await getTripUpdates(routeIds);
+    let vehiclePositions = await getVehiclePositions(routeIds);
 
     return [alerts, tripUpdates, vehiclePositions];
 }
@@ -203,8 +199,8 @@ async function writeApiData(alerts: Array<Alert>, tripUpdates: Array<TripUpdate>
 }
 
 
-export async function main(routes: Array<Route>) {
-    let data = await getApiData(routes);
+export async function main(routeIds: Array<string>) {
+    let data = await getApiData(routeIds);
     let [alerts, tripUpdates, vehiclePositions] = data;
     writeApiData(alerts, tripUpdates, vehiclePositions);
 
