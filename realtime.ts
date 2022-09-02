@@ -119,9 +119,12 @@ async function getApiData(routes: Array<Route>): Promise<any> {
 
     /**
      * Gets vehicle positions relevant to UQ Lakes Station.
+     * 
+     * @param {Array<Route>} routes routes relevant to UQ Lakes station
+     * 
      * @returns {Promise<Array<VehiclePosition>>} vehicle positions relevant to UQ Lakes Station
      */
-    async function getVehiclePositions(): Promise<Array<VehiclePosition>> {
+    async function getVehiclePositions(routes: Array<Route>): Promise<Array<VehiclePosition>> {
         /**
          * Extracts the vehicle positions from the API objects.
          * 
@@ -137,11 +140,17 @@ async function getApiData(routes: Array<Route>): Promise<any> {
          * Filters vehicle positions to those relevant to UQ Lakes Station.
          * 
          * @param {Array<VehiclePosition>} vehiclePositions all vehicle positions from the API
+         * @param {Array<Route>} routes routes relevant to UQ Lakes station
          * 
          * @returns {Array<VehiclePosition>} vehicle positions relevant to UQ Lakes Station
          */
-        function filterVehiclePositions(vehiclePositions: Array<VehiclePosition>): Array<VehiclePosition> {
-            return vehiclePositions.filter(vehiclePosition => true);
+        function filterVehiclePositions(vehiclePositions: Array<VehiclePosition>, routes: Array<Route>): Array<VehiclePosition> {
+            let routeIds = routes.map(route => route.route_id);
+
+            return vehiclePositions.filter(vehiclePosition =>
+                vehiclePosition.trip?.routeId
+                && routeIds.includes(vehiclePosition.trip?.routeId)
+            );
         }
 
         let response = await fetch(API_DOMAIN + "vehicle_positions.json");
@@ -151,12 +160,12 @@ async function getApiData(routes: Array<Route>): Promise<any> {
         let entity = jsonified.entity;
         let vehiclePositions = extractVehiclePositions(entity);
 
-        return filterVehiclePositions(vehiclePositions);
+        return filterVehiclePositions(vehiclePositions, routes);
     }
 
     let alerts = await getAlerts(routes);
     let tripUpdates = await getTripUpdates(routes);
-    let vehiclePositions = await getVehiclePositions();
+    let vehiclePositions = await getVehiclePositions(routes);
 
     return [alerts, tripUpdates, vehiclePositions];
 }
