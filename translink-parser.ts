@@ -2,21 +2,74 @@ import { main as retrieveApiData } from "./api.js";
 import { getStaticData, UQ_LAKES_STOP_ID } from "./static.js";
 
 import prompt from "prompt";
+import { Calendar, CalendarDates, Route, Stop, StopTime, Trip } from "./gtfs-static.js";
+import { Alert, TripUpdate, VehiclePosition } from "./gtfs-realtime.js";
 prompt.message = "";
 prompt.delimiter = "";
 prompt.colors = false;
 
 const MAX_FAILED_ATTEMPTS = 4;
 
-let alerts, calendarDates, calendar, routes, stops,
-    stopTimes, trips, tripUpdates, vehiclePositions;
+let alerts: Array<Alert>;
+let calendarDates: Array<CalendarDates>;
+let calendar: Array<Calendar>;
+let routes: Array<Route>;
+let stops: Array<Stop>;
+let stopTimes: Array<StopTime>;
+let trips: Array<Trip>;
+let tripUpdates: Array<TripUpdate>;
+let vehiclePositions: Array<VehiclePosition>;
+
+interface _Date {
+    day: number;
+    month: number;
+    year: number;
+}
+
+interface PromptSchema {
+    properties: {
+        property: {
+            description: string;
+        };
+    };
+}
+
+interface Result {
+    "Route Short Name": string;
+    "Route Long Name": string;
+    "Service ID": string;
+    "Headsign": string;
+    "Scheduled Arrival Time": {
+        hour: number;
+        minute: number;
+    };
+    "Live Arrival Time": string;
+    "Live Position": string;
+}
+
+interface StaticResult {
+    routeShortName: string;
+    routeLongName: string;
+    serviceId: string;
+    tripId: string;
+    headsign: string;
+    scheduledArrivalTime: {
+        hour: number;
+        minute: number;
+    };
+}
+
+interface Time {
+    hour: number;
+    minute: number;
+}
 
 /**
  * Main program loop.
  * 
  * @param {boolean} [welcome = true] whether to output the welcome message
  */
-async function main(welcome = true) {
+async function main(welcome: boolean = true) {
     if (welcome) {
         console.log("Welcome to the UQ Lakes station bus tracker!");
     }
@@ -38,7 +91,15 @@ async function main(welcome = true) {
     }
 }
 
-function getPromptSchema(purpose) {
+/**
+ * Returns the prompt schema required to get the information specified by
+ * `purpose`.
+ * 
+ * @param {string} purpose information to be collected
+ * 
+ * @returns {PromptSchema} prompt schema
+ */
+function getPromptSchema(purpose: string): PromptSchema {
     let description = (purpose == "again")
         ? "Would you like to search again?"
         : `What ${purpose} will you depart UQ Lakes station by bus? `;
@@ -57,11 +118,11 @@ function getPromptSchema(purpose) {
  * Prompts the user for the departure date to search.
  * 
  * @param {number} [attempts = 0] number of previously failed attempts
- * @param {string} [previous = null] previous invalid date string
+ * @param {string} [previous = ""] previous invalid date string
  * 
- * @returns {object} date object with year, month and day properties
+ * @returns {Promise<_Date>} date entered by the user
  */
-async function getDate(attempts = 0, previous = null) {
+async function getDate(attempts: number = 0, previous: string = ""): Promise<_Date> {
     /**
      * Determines whether the given string represents a valid date.
      * 
@@ -69,11 +130,13 @@ async function getDate(attempts = 0, previous = null) {
      * 
      * @returns {boolean} `true` if the date string is valid; `false` otherwise
      */
-    function validateDate(date) {
+    function validateDate(date: string): boolean {
         /**
          * Determines whether the given string is of the correct format.
+         * 
+         * @param {string} date date string to validate
          */
-        let validateDateFormat = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date);
+        let validateDateFormat = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date);
 
         /**
          * Validates whether the given day is valid for the given month.
@@ -81,9 +144,9 @@ async function getDate(attempts = 0, previous = null) {
          * @param {number} month month number
          * @param {number} day day number
          * 
-         * @returns `true` if the day is valid for the given month; `false` otherwise
+         * @returns {boolean} whether the day is valid for the month
          */
-        function validateDay(month, day) {
+        function validateDay(month: number, day: number): boolean {
             if (day < 1) {
                 return false;
             }
@@ -114,9 +177,9 @@ async function getDate(attempts = 0, previous = null) {
          * 
          * @param {string[]} components components of the date string
          * 
-         * @returns {boolean} `true` if the components are valid; `false` otherwise
+         * @returns {boolean} whether each component is valid
          */
-        function validateDateComponents(components) {
+        function validateDateComponents(components: string[]): boolean {
             let integerComponents = components.map(component => parseInt(component));
             let [year, month, day] = integerComponents;
             return year > 2020
@@ -139,7 +202,7 @@ async function getDate(attempts = 0, previous = null) {
     }
 
     let promptResult = await prompt.get(getPromptSchema("date"));
-    let date = promptResult.property;
+    let date = promptResult.property as string;
 
     if (validateDate(date)) {
         return {
@@ -157,11 +220,11 @@ async function getDate(attempts = 0, previous = null) {
  * Prompts the user for the departure time to search.
  * 
  * @param {number} [attempts = 0] number of previously failed attempts
- * @param {string} [previous = null] previous invalid time string
+ * @param {string} [previous = ""] previous invalid time string
  * 
- * @returns {object} time object with hour and minute properties
+ * @returns {Promise<Time>} time entered by the user
  */
-async function getTime(attempts = 0, previous = null) {
+async function getTime(attempts: number = 0, previous: string = ""): Promise<Time> {
     /**
      * Determines whether the given string represents a valid time.
      * 
@@ -169,11 +232,13 @@ async function getTime(attempts = 0, previous = null) {
      * 
      * @returns {boolean} `true` if the time string is valid; `false` otherwise
      */
-    function validateTime(time) {
+    function validateTime(time: string): boolean {
         /**
          * Determines whether the given string is of the correct format.
+         * 
+         * @param {string} time time string to validate
          */
-        let validateTimeFormat = (time) => /^\d{2}:\d{2}$/.test(time);
+        let validateTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
         /**
          * Determines whether each component of the given time string is valid.
@@ -182,7 +247,7 @@ async function getTime(attempts = 0, previous = null) {
          * 
          * @returns {boolean} `true` if the components are valid; `false` otherwise
          */
-        function validateTimeComponents(components) {
+        function validateTimeComponents(components: string[]): boolean {
             let integerComponents = components.map(component => parseInt(component));
             let [hour, minute] = integerComponents;
             return hour >= 0 && hour <= 23
@@ -204,7 +269,7 @@ async function getTime(attempts = 0, previous = null) {
     }
 
     let result = await prompt.get(getPromptSchema("time"));
-    let time = result.property;
+    let time = result.property as string;
 
     if (validateTime(time)) {
         return {
@@ -221,42 +286,22 @@ async function getTime(attempts = 0, previous = null) {
  * Filters the static data to only include buses that arrive within 10 minutes
  * of the given time.
  * 
- * The format of the objects in the returned array is:
- *  {
- *      routeShortName: string,
- *      routeLongName: string,
- *      serviceId: string,
- *      headsign: string,
- *      scheduledArrival: {
- *          hour: number,
- *          minute: number
- *      },
- *      liveArrival: {
- *          hour: number,       // currently null
- *          minute: number      // currently null
- *      },
- *      livePosition: {
- *          latitude: number,   // currently null
- *          longitude: number   // currently null
- *      }
- *  }
+ * @param {_Date} date date by which to filter for arriving buses
+ * @param {Time} time time by which to filter for arriving buses
  * 
- * @param {object} date date object with year, month and day properties
- * @param {object} time time object with hour and minute properties
- * 
- * @returns {object[]} required data for buses arriving within 10 minutes of the
+ * @returns {Array<StaticResult>} required data for buses arriving within 10 minutes of the
  * given time
  */
-function filterStaticData(date, time) {
+function filterStaticData(date: _Date, time: Time): Array<StaticResult> {
     /**
      * Parses the given date string into an object with hour and minute
      * properties.
      * 
      * @param {string} time time string in HH-mm format
      * 
-     * @returns {object} time object with hour and minute properties
+     * @returns {Time} parsed time
      */
-    function parseTime(time) {
+    function parseTime(time: string): Time {
         return {
             hour: parseInt(time.substring(0, 2)),
             minute: parseInt(time.substring(3, 5))
@@ -266,16 +311,17 @@ function filterStaticData(date, time) {
     /**
      * Returns the number of minutes that elapse from `userTime` to `stopTime`.
      * 
-     * @param {object} userTime time to search from
-     * @param {object} stopTime arrival time of the bus
+     * @param {Time} userTime time to search from
+     * @param {Time} stopTime arrival time of the bus
      * 
      * @returns {number} number of minutes that elapse from `userTime` to `stopTime`
      */
-    function timeDiff(userTime, stopTime) {
+    function timeDiff(userTime: Time, stopTime: Time): number {
         return (stopTime.hour - userTime.hour) * 60 + (stopTime.minute - userTime.minute);
     }
 
     let filteredStopTimes = stopTimes.filter(stopTime => {
+        if (!stopTime.arrival_time) return false;
         let arrivalTime = parseTime(stopTime.arrival_time);
         let diff = timeDiff(time, arrivalTime);
         return diff >= 0 && diff <= 10;
@@ -286,11 +332,17 @@ function filterStaticData(date, time) {
     let filteredRouteIds = filteredTrips.map(trip => trip.route_id);
     let filteredRoutes = routes.filter(route => filteredRouteIds.includes(route.route_id));
 
-    let result = [];
+    let result: Array<StaticResult> = [];
 
     for (let stop of filteredStopTimes) {
+        if (!stop.arrival_time) continue;
+
         let trip = filteredTrips.find(trip => trip.trip_id === stop.trip_id);
-        let route = filteredRoutes.find(route => route.route_id === trip.route_id);
+        if (!(trip?.route_id && trip?.service_id
+            && trip?.trip_headsign && trip?.trip_id)) continue;
+
+        let route = filteredRoutes.find(route => trip && route.route_id === trip.route_id);
+        if (!(route?.route_short_name && route?.route_long_name)) continue;
 
         result.push(
             {
@@ -308,55 +360,47 @@ function filterStaticData(date, time) {
     result.sort((a, b) => a.scheduledArrivalTime.minute - b.scheduledArrivalTime.minute);
     result.sort((a, b) => a.scheduledArrivalTime.hour - b.scheduledArrivalTime.hour);
 
-    return result.map(arrival => (
-        {
-            ...arrival,
-            // overwrite the arrival time with a string
-            scheduledArrivalTime: `${arrival.scheduledArrivalTime.hour.toString().padStart(2, '0')}:${arrival.scheduledArrivalTime.minute.toString().padStart(2, '0')}`
-        }
-    ));
+    return result;
 }
 
 
 /**
  * Incorporates live data into the given static data.
  * 
- * @param {object[]} filteredStaticData information on relevant buses
+ * @param {Array<StaticResult>} filteredStaticData information on relevant buses
  * 
- * @returns {object[]} information on relevant buses, including live data
+ * @returns {Array<Result>} information on relevant buses, including live data
  */
-function incorporateApiData(filteredStaticData) {
+function incorporateApiData(filteredStaticData: Array<StaticResult>): Array<Result> {
     return filteredStaticData.map(arrival => {
-        let baseUpdate = tripUpdates.find(update => update.tripUpdate.trip.tripId === arrival.tripId);
-        let arrivalTime;
-        if (baseUpdate) {
-            let stopTimeUpdate = baseUpdate.tripUpdate.stopTimeUpdate.find(update => update.stopId === UQ_LAKES_STOP_ID);
-            arrivalTime = new Date(parseInt(stopTimeUpdate.arrival.time));
-        } else {
-            arrivalTime = null;
+        let tripUpdate: TripUpdate | undefined = tripUpdates.find(tripUpdate => tripUpdate.trip.tripId === arrival.tripId);
+        let arrivalTime = undefined;
+        if (tripUpdate?.stopTimeUpdate) {
+            let stopTimeUpdate = tripUpdate.stopTimeUpdate.find(update => update.stopId === UQ_LAKES_STOP_ID);
+            if (stopTimeUpdate?.arrival?.time) {
+                arrivalTime = new Date(parseInt(stopTimeUpdate.arrival.time));
+            }
         }
 
-        let positionUpdate = vehiclePositions.find(position => position.vehicle.trip.tripId === arrival.tripId);
+        let vehiclePosition = vehiclePositions.find(position => position?.trip?.tripId === arrival.tripId);
 
         return {
             ...arrival,
-            liveArrivalTime: arrivalTime == null ? arrivalTime : {
+            liveArrivalTime: (!arrivalTime) ? null : {
                 hour: arrivalTime.getHours(),
                 minute: arrivalTime.getMinutes()
             },
-            livePosition: positionUpdate == undefined ? null : {
-                latitude: positionUpdate.vehicle.position.latitude,
-                longitude: positionUpdate.vehicle.position.longitude
+            livePosition: (!vehiclePosition) ? null : {
+                latitude: vehiclePosition?.position?.latitude,
+                longitude: vehiclePosition?.position?.longitude
             }
         };
     }).map(arrival => (
         {
             ...arrival,
-            liveArrivalTime: arrival.liveArrivalTime == null
-                ? "Not Available"
+            liveArrivalTime: (!arrival.liveArrivalTime) ? "Not Available"
                 : `${arrival.liveArrivalTime.hour}:${arrival.liveArrivalTime.minute}`,
-            livePosition: arrival.livePosition == null
-                ? "Not Available"
+            livePosition: (!arrival.livePosition) ? "Not Available"
                 : `${arrival.livePosition.latitude}, ${arrival.livePosition.longitude}`
         }
     )).map(arrival => (
@@ -377,11 +421,11 @@ function incorporateApiData(filteredStaticData) {
  * Prompts the user to determine whether they want to run the tracker again.
  * 
  * @param {number} [attempts = 0] number of previously failed attempts
- * @param {string} [previous = null] previous invalid response string
+ * @param {string} [previous = ""] previous invalid response string
  * 
- * @returns {boolean} `true` if the user wants to run the tracker again; `false` otherwise
+ * @returns {Promise<boolean>} whether the user wants to run the tracker again
  */
-async function getAgain(attempts = 0, previous = null) {
+async function getAgain(attempts: number = 0, previous: string = ""): Promise<boolean> {
     if (attempts) {
         console.log(`    "${previous}" is not a valid response.`)
 
@@ -394,7 +438,7 @@ async function getAgain(attempts = 0, previous = null) {
     }
 
     let result = await prompt.get(getPromptSchema("again"));
-    let again = result.property;
+    let again = result.property as string;
 
     if (/^(y|yes)$/.test(again.toLowerCase())) {
         return true;

@@ -1,7 +1,15 @@
 import { readFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
+import {
+    Calendar,
+    CalendarDates,
+    Route,
+    Stop,
+    StopTime,
+    Trip
+} from "./gtfs-static.js";
 
-export let UQ_LAKES_STOP_ID;
+export let UQ_LAKES_STOP_ID: Stop["stop_id"];
 
 
 export async function getStaticData() {
@@ -16,15 +24,15 @@ export async function getStaticData() {
 
     /**
      * Gets stops relevant to UQ Lakes Station.
-     * @returns {object} stops relevant to UQ Lakes Station
+     * @returns {Promise<Array<Stop>>} stops relevant to UQ Lakes Station
      */
-    async function getStops() {
+    async function getStops(): Promise<Array<Stop>> {
         /**
          * Parses a CSV string into an object.
          * 
          * @param {string} stops CSV string
          */
-        function parseStops(stops) {
+        function parseStops(stops: string) {
             let options = getParseOptions();
             return parse(stops, options)
         }
@@ -32,12 +40,14 @@ export async function getStaticData() {
         /**
          * Filters stops to those relevant to UQ Lakes Station.
          * 
-         * @param {array} stops all stops from the static data
+         * @param {Array<Stop>} stops all stops from the static data
          * 
-         * @returns {object} stops relevant to UQ Lakes Station
+         * @returns {Array<Stop>} stops relevant to UQ Lakes Station
          */
-        function filterStops(stops) {
-            return stops.filter(stop => /\.*UQ Lakes station\.*/.test(stop.stop_name)
+        function filterStops(stops: Array<Stop>): Array<Stop> {
+            return stops.filter(stop =>
+                stop.stop_name
+                && /\.*UQ Lakes station\.*/.test(stop.stop_name)
                 && /\d/.test(stop.stop_id));
         }
 
@@ -51,17 +61,17 @@ export async function getStaticData() {
     /**
      * Gets stop times relevant to UQ Lakes Station.
      * 
-     * @param {array} stops stops relevant to UQ Lakes Station
+     * @param {Array<Stop>} stops stops relevant to UQ Lakes Station
      * 
-     * @returns {object} stop times relevant to UQ Lakes Station
+     * @returns {Promise<Array<StopTime>>} stop times relevant to UQ Lakes Station
      */
-    async function getStopTimes(stops) {
+    async function getStopTimes(stops: Array<Stop>): Promise<Array<StopTime>> {
         /**
          * Parses a CSV string into an object.
          * 
          * @param {string} stopTimes CSV string
          */
-        function parseStopTimes(stopTimes) {
+        function parseStopTimes(stopTimes: string) {
             let options = getParseOptions();
             return parse(stopTimes, options)
         }
@@ -69,35 +79,35 @@ export async function getStaticData() {
         /**
          * Filters stop times to those relevant to UQ Lakes Station.
          * 
-         * @param {array} stopTimes all stop times from the static data
-         * @param {array} stops stops relevant to UQ Lakes Station
+         * @param {Array<StopTime>} stopTimes all stop times from the static data
+         * @param {Array<Stop>} stops stops relevant to UQ Lakes Station
          * 
-         * @returns {object} stop times relevant to UQ Lakes Station
+         * @returns {Array<StopTime>} stop times relevant to UQ Lakes Station
          */
-        function filterStopTimes(stopTimes, stops) {
+        function filterStopTimes(stopTimes: Array<StopTime>, stops: Array<Stop>): Array<StopTime> {
             let stopIds = stops.map(stop => stop.stop_id);
             return stopTimes.filter(stopTime => stopIds.includes(stopTime.stop_id));
         }
 
-        let stopTimes = await readFile("static-data/stop_times.txt");
-        let parsedStopTimes = parseStopTimes(stopTimes.toString());
+        let stopTimesFile = await readFile("static-data/stop_times.txt");
+        let parsedStopTimes = parseStopTimes(stopTimesFile.toString());
         return filterStopTimes(parsedStopTimes, stops);
     }
 
     /**
      * Gets trips relevant to UQ Lakes Station.
      * 
-     * @param {array} stopTimes stop times relevant to UQ Lakes Station
+     * @param {Array<StopTime>} stopTimes stop times relevant to UQ Lakes Station
      * 
-     * @returns {object} trips relevant to UQ Lakes Station
+     * @returns {Promise<Array<Trip>>} trips relevant to UQ Lakes Station
      */
-    async function getTrips(stopTimes) {
+    async function getTrips(stopTimes: Array<StopTime>): Promise<Array<Trip>> {
         /**
          * Parses a CSV string into an object.
          * 
          * @param {string} trips CSV string
          */
-        function parseTrips(trips) {
+        function parseTrips(trips: string) {
             let options = getParseOptions();
             return parse(trips, options)
         }
@@ -105,35 +115,35 @@ export async function getStaticData() {
         /**
          * Filters trips to those relevant to UQ Lakes Station.
          * 
-         * @param {array} trips all trips from the static data
-         * @param {array} stopTimes stop times relevant to UQ Lakes Station
+         * @param {Array<Trip>} trips all trips from the static data
+         * @param {Array<StopTime>} stopTimes stop times relevant to UQ Lakes Station
          * 
-         * @returns {object} trips relevant to UQ Lakes Station
+         * @returns {Array<Trip>} trips relevant to UQ Lakes Station
          */
-        function filterTrips(trips, stopTimes) {
+        function filterTrips(trips: Array<Trip>, stopTimes: Array<StopTime>): Array<Trip> {
             let tripIds = stopTimes.map(stopTime => stopTime.trip_id);
             return trips.filter(trip => tripIds.includes(trip.trip_id));
         }
 
-        let trips = await readFile("static-data/trips.txt");
-        let parsedTrips = parseTrips(trips.toString());
+        let tripsFile = await readFile("static-data/trips.txt");
+        let parsedTrips = parseTrips(tripsFile.toString());
         return filterTrips(parsedTrips, stopTimes);
     }
 
     /**
      * Gets calendar dates relevant to UQ Lakes Station.
      * 
-     * @param {array} trips trips relevant to UQ Lakes Station
+     * @param {Array<Trip>} trips trips relevant to UQ Lakes Station
      * 
-     * @returns {object} calendar dates relevant to UQ Lakes Station
+     * @returns {Promise<Array<CalendarDates>>} calendar dates relevant to UQ Lakes Station
      */
-    async function getCalendarDates(trips) {
+    async function getCalendarDates(trips: Array<Trip>): Promise<Array<CalendarDates>> {
         /**
          * Parses a CSV string into an object.
          * 
          * @param {string} calendarDates CSV string
          */
-        function parseCalendarDates(calendarDates) {
+        function parseCalendarDates(calendarDates: string) {
             let options = getParseOptions();
             return parse(calendarDates, options)
         }
@@ -141,12 +151,12 @@ export async function getStaticData() {
         /**
          * Filters calendar dates to those relevant to UQ Lakes Station.
          * 
-         * @param {array} calendarDates all calendar dates from the static data
-         * @param {array} trips trips relevant to UQ Lakes Station
+         * @param {Array<CalendarDates>} calendarDates all calendar dates from the static data
+         * @param {Array<Trip>} trips trips relevant to UQ Lakes Station
          * 
-         * @returns {object} calendar dates relevant to UQ Lakes Station
+         * @returns {Array<CalendarDates>} calendar dates relevant to UQ Lakes Station
          */
-        function filterCalendarDates(calendarDates, trips) {
+        function filterCalendarDates(calendarDates: Array<CalendarDates>, trips: Array<Trip>): Array<CalendarDates> {
             let serviceIds = trips.map(trip => trip.service_id);
             return calendarDates.filter(date => serviceIds.includes(date.service_id));
         }
@@ -159,17 +169,17 @@ export async function getStaticData() {
     /**
      * Gets calendar relevant to UQ Lakes Station.
      * 
-     * @param {array} trips trips relevant to UQ Lakes Station
+     * @param {Array<Trip>} trips trips relevant to UQ Lakes Station
      * 
-     * @returns {object} calendar relevant to UQ Lakes Station
+     * @returns {Promise<Array<Calendar>>} calendar relevant to UQ Lakes Station
      */
-    async function getCalendar(trips) {
+    async function getCalendar(trips: Array<Trip>): Promise<Array<Calendar>> {
         /**
          * Parses a CSV string into an object.
          * 
          * @param {string} calendar CSV string
          */
-        function parseCalendar(calendar) {
+        function parseCalendar(calendar: string) {
             let options = getParseOptions();
             return parse(calendar, options)
         }
@@ -177,12 +187,12 @@ export async function getStaticData() {
         /**
          * Filters calendar to those relevant to UQ Lakes Station.
          * 
-         * @param {array} calendar all services from the static data
-         * @param {array} trips trips relevant to UQ Lakes Station
+         * @param {Array<Calendar>} calendar all services from the static data
+         * @param {Array<Trip>} trips trips relevant to UQ Lakes Station
          * 
-         * @returns {object} calendar relevant to UQ Lakes Station
+         * @returns {Array<Calendar>} calendar relevant to UQ Lakes Station
          */
-        function filterCalendar(calendar, trips) {
+        function filterCalendar(calendar: Array<Calendar>, trips: Array<Trip>): Array<Calendar> {
             let serviceIds = trips.map(trip => trip.service_id);
             return calendar.filter(service => serviceIds.includes(service.service_id));
         }
@@ -195,17 +205,17 @@ export async function getStaticData() {
     /**
      * Gets routes relevant to UQ Lakes Station.
      * 
-     * @param {array} trips trips relevant to UQ Lakes Station
+     * @param {Array<Trip>} trips trips relevant to UQ Lakes Station
      * 
-     * @returns {object} routes relevant to UQ Lakes Station
+     * @returns {Promise<Array<Route>>} routes relevant to UQ Lakes Station
      */
-    async function getRoutes(trips) {
+    async function getRoutes(trips: Array<Trip>): Promise<Array<Route>> {
         /**
          * Parses a CSV string into an object.
          * 
          * @param {string} routes CSV string
          */
-        function parseRoutes(routes) {
+        function parseRoutes(routes: string) {
             let options = getParseOptions();
             return parse(routes, options)
         }
@@ -213,12 +223,12 @@ export async function getStaticData() {
         /**
          * Filters routes to those relevant to UQ Lakes Station.
          * 
-         * @param {array} routes all routes from the static data
-         * @param {array} trips trips relevant to UQ Lakes Station
+         * @param {Array<Route>} routes all routes from the static data
+         * @param {Array<Trip>} trips trips relevant to UQ Lakes Station
          * 
-         * @returns {object} routes relevant to UQ Lakes Station
+         * @returns {Array<Route>} routes relevant to UQ Lakes Station
          */
-        function filterRoutes(routes, trips) {
+        function filterRoutes(routes: Array<Route>, trips: Array<Trip>): Array<Route> {
             let routeIds = trips.map(trip => trip.route_id);
             return routes.filter(route => routeIds.includes(route.route_id));
         }
