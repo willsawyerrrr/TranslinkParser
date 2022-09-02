@@ -396,6 +396,7 @@ function incorporateApiData(filteredStaticData: Array<StaticResult>): Array<Resu
             }
         };
     }).map(arrival => (
+        // stringify live arrival time
         {
             ...arrival,
             liveArrivalTime: (!arrival.liveArrivalTime) ? "Not Available"
@@ -404,6 +405,7 @@ function incorporateApiData(filteredStaticData: Array<StaticResult>): Array<Resu
                 : `${arrival.livePosition.latitude}, ${arrival.livePosition.longitude}`
         }
     )).map(arrival => (
+        // stringify property names for nice printing
         {
             "Route Short Name": arrival.routeShortName,
             "Route Long Name": arrival.routeLongName,
