@@ -17,7 +17,7 @@ interface APITripUpdate {
 
 interface APIVehiclePosition {
     id: string;
-    vehiclePositon: VehiclePosition;
+    vehicle: VehiclePosition;
 }
 
 
@@ -115,7 +115,7 @@ async function getApiData(): Promise<any> {
          * @returns {Array<VehiclePosition>} extracted vehicle positions
          */
         function extractVehiclePositions(vehiclePositions: Array<APIVehiclePosition>): Array<VehiclePosition> {
-            return vehiclePositions.map(vehiclePosition => vehiclePosition.vehiclePositon);
+            return vehiclePositions.map(vehiclePosition => vehiclePosition.vehicle);
         }
 
         /**
