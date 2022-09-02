@@ -128,7 +128,8 @@ async function getDate(attempts: number = 0, previous: string = ""): Promise<Dat
     let promptResult = await prompt.get(getPromptSchema("date"));
     let date = promptResult.property as string;
 
-    if (new Date(date).toString() != "Invalid Date") {
+    if (/\d{4}-\d{2}-\d{2}/.test(date)
+        && new Date(date).toString() != "Invalid Date") {
         return new Date(date);
     }
 
