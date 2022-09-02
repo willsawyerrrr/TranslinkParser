@@ -20,12 +20,6 @@ let trips: Array<Trip>;
 let tripUpdates: Array<TripUpdate>;
 let vehiclePositions: Array<VehiclePosition>;
 
-interface _Date {
-    day: number;
-    month: number;
-    year: number;
-}
-
 interface PromptSchema {
     properties: {
         property: {
@@ -120,76 +114,9 @@ function getPromptSchema(purpose: string): PromptSchema {
  * @param {number} [attempts = 0] number of previously failed attempts
  * @param {string} [previous = ""] previous invalid date string
  * 
- * @returns {Promise<_Date>} date entered by the user
+ * @returns {Promise<Date>} date entered by the user
  */
-async function getDate(attempts: number = 0, previous: string = ""): Promise<_Date> {
-    /**
-     * Determines whether the given string represents a valid date.
-     * 
-     * @param {string} date date string to validate
-     * 
-     * @returns {boolean} `true` if the date string is valid; `false` otherwise
-     */
-    function validateDate(date: string): boolean {
-        /**
-         * Determines whether the given string is of the correct format.
-         * 
-         * @param {string} date date string to validate
-         */
-        let validateDateFormat = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date);
-
-        /**
-         * Validates whether the given day is valid for the given month.
-         * 
-         * @param {number} month month number
-         * @param {number} day day number
-         * 
-         * @returns {boolean} whether the day is valid for the month
-         */
-        function validateDay(month: number, day: number): boolean {
-            if (day < 1) {
-                return false;
-            }
-
-            switch (month) {
-                case 1:
-                case 3:
-                case 5:
-                case 7:
-                case 8:
-                case 10:
-                case 12:
-                    return day <= 31;
-                case 4:
-                case 6:
-                case 9:
-                case 11:
-                    return day <= 30;
-                case 2:
-                    return day <= 28;
-                default:
-                    return false;
-            }
-        }
-
-        /**
-         * Determines whether each component of the given date string is valid.
-         * 
-         * @param {string[]} components components of the date string
-         * 
-         * @returns {boolean} whether each component is valid
-         */
-        function validateDateComponents(components: string[]): boolean {
-            let integerComponents = components.map(component => parseInt(component));
-            let [year, month, day] = integerComponents;
-            return year > 2020
-                && month >= 1 && month <= 12
-                && validateDay(month, day);
-        }
-
-        return validateDateFormat(date) && validateDateComponents(date.split("-"));
-    }
-
+async function getDate(attempts: number = 0, previous: string = ""): Promise<Date> {
     if (attempts) {
         console.log(`    "${previous}" is not a valid date.`)
 
@@ -204,12 +131,8 @@ async function getDate(attempts: number = 0, previous: string = ""): Promise<_Da
     let promptResult = await prompt.get(getPromptSchema("date"));
     let date = promptResult.property as string;
 
-    if (validateDate(date)) {
-        return {
-            year: parseInt(date.substring(0, 4)),
-            month: parseInt(date.substring(5, 7)),
-            day: parseInt(date.substring(8))
-        };
+    if (new Date(date).toString() != "Invalid Date") {
+        return new Date(date);
     }
 
     return await getDate(++attempts, date);
@@ -286,13 +209,13 @@ async function getTime(attempts: number = 0, previous: string = ""): Promise<Tim
  * Filters the static data to only include buses that arrive within 10 minutes
  * of the given time.
  * 
- * @param {_Date} date date by which to filter for arriving buses
+ * @param {Date} date date by which to filter for arriving buses
  * @param {Time} time time by which to filter for arriving buses
  * 
  * @returns {Array<StaticResult>} required data for buses arriving within 10 minutes of the
  * given time
  */
-function filterStaticData(date: _Date, time: Time): Array<StaticResult> {
+function filterStaticData(date: Date, time: Time): Array<StaticResult> {
     /**
      * Parses the given date string into an object with hour and minute
      * properties.
@@ -320,17 +243,63 @@ function filterStaticData(date: _Date, time: Time): Array<StaticResult> {
         return (stopTime.hour - userTime.hour) * 60 + (stopTime.minute - userTime.minute);
     }
 
-    let filteredStopTimes = stopTimes.filter(stopTime => {
-        if (!stopTime.arrival_time) return false;
-        let arrivalTime = parseTime(stopTime.arrival_time);
-        let diff = timeDiff(time, arrivalTime);
-        return diff >= 0 && diff <= 10;
-    });
+    let filteredServiceIds: Array<string>;
+    switch (date.getDay()) {
+        case 0:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.sunday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        case 1:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.monday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        case 2:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.tuesday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        case 3:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.wednesday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        case 4:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.thursday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        case 5:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.friday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        case 6:
+            filteredServiceIds = calendar.filter(calendarEntry => calendarEntry.saturday)
+                .map(calendarEntry => calendarEntry.service_id);
+            break;
+        default:
+            throw new Error("Invalid date.");
+    }
 
-    let filteredTripIds = filteredStopTimes.map(stopTime => stopTime.trip_id);
-    let filteredTrips = trips.filter(trip => filteredTripIds.includes(trip.trip_id));
+    let filteredTrips = trips.filter(trip => filteredServiceIds.includes(trip.service_id));
+    let filteredTripIds = filteredTrips.map(trip => trip.trip_id);
     let filteredRouteIds = filteredTrips.map(trip => trip.route_id);
     let filteredRoutes = routes.filter(route => filteredRouteIds.includes(route.route_id));
+
+    let filteredStopTimes = stopTimes.filter(stopTime => filteredTripIds.includes(stopTime.trip_id))
+        .filter(stopTime => {
+            // if it terminates at this stop, don't suggest it
+            if (!stopTime.departure_time) return false;
+
+            // if it is already in transit, use its arrival time
+            if (stopTime.arrival_time) {
+                let arrivalTime = parseTime(stopTime.arrival_time);
+                let diff = timeDiff(time, arrivalTime);
+                return diff >= 0 && diff <= 10;
+            }
+
+            // if it begins at this stop, use its departure time
+            let departureTime = parseTime(stopTime.departure_time);
+            let diff = timeDiff(time, departureTime);
+            return diff >= 0 && diff <= 10;
+        });
+
 
     let result: Array<StaticResult> = [];
 
