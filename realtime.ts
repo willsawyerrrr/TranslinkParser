@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import fs from "fs";
 import { Alert, TripUpdate, VehiclePosition } from "./gtfs-realtime.js";
+import { Route } from "./gtfs-static.js";
 
 
 const API_DOMAIN = "http://127.0.0.1:5343/gtfs/seq/";
@@ -23,16 +24,18 @@ interface APIVehiclePosition {
 
 /**
  * Gets data from the API.
+ * @param {Array<Route>} routes routes relevant to UQ Lakes station
  * 
  * @returns {Promise<Array<Array<Alert>, Array<TripUpdate>, Array<VehiclePosition>>>} Promise that resolves to an array of three arrays: alerts, trip updates, and vehicle positions.
  */
-async function getApiData(): Promise<any> {
+async function getApiData(routes: Array<Route>): Promise<any> {
     /**
      * Gets alerts relevant to UQ Lakes Station.
+     * @param {Array<Route>} routes routes relevant to UQ Lakes station
      * 
      * @returns {Promise<Array<Alert>>} alerts relevant to UQ Lakes Station
      */
-    async function getAlerts(): Promise<Array<Alert>> {
+    async function getAlerts(routes: Array<Route>): Promise<Array<Alert>> {
         /**
          * Extracts the alerts from the API objects.
          * 
@@ -48,11 +51,17 @@ async function getApiData(): Promise<any> {
          * Filters alerts to those relevant to UQ Lakes Station.
          * 
          * @param {Array<Alert>} alerts all alerts from the API
+         * @param {Array<Route>} routes routes relevant to UQ Lakes station
          * 
          * @returns {Array<Alert>} alerts relevant to UQ Lakes Station
          */
-        function filterAlerts(alerts: Array<Alert>): Array<Alert> {
-            return alerts.filter(alert => true);
+        function filterAlerts(alerts: Array<Alert>, routes: Array<Route>): Array<Alert> {
+            let routeIds = routes.map(route => route.route_id);
+
+            return alerts.filter(alert => {
+                let alertRouteIds = alert.informedEntity.map(entity => entity.routeId);
+                return routeIds.some(routeId => alertRouteIds.includes(routeId))
+            });
         }
 
         let response = await fetch(API_DOMAIN + "alerts.json");
@@ -62,7 +71,7 @@ async function getApiData(): Promise<any> {
         let entity = jsonified.entity;
         let alerts = extractAlerts(entity);
 
-        return filterAlerts(alerts);
+        return filterAlerts(alerts, routes);
     }
 
     /**
@@ -139,7 +148,7 @@ async function getApiData(): Promise<any> {
         return filterVehiclePositions(vehiclePositions);
     }
 
-    let alerts = await getAlerts();
+    let alerts = await getAlerts(routes);
     let tripUpdates = await getTripUpdates();
     let vehiclePositions = await getVehiclePositions();
 
@@ -179,8 +188,8 @@ async function writeApiData(alerts: Array<Alert>, tripUpdates: Array<TripUpdate>
 }
 
 
-export async function main() {
-    let data = await getApiData();
+export async function main(routes: Array<Route>) {
+    let data = await getApiData(routes);
     let [alerts, tripUpdates, vehiclePositions] = data;
     writeApiData(alerts, tripUpdates, vehiclePositions);
 

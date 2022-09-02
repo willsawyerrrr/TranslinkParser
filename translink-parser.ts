@@ -452,11 +452,11 @@ async function getAgain(attempts: number = 0, previous: string = ""): Promise<bo
 let staticData = await getStaticData();
 ({ stops, stopTimes, trips, calendarDates, calendar, routes } = staticData);
 
-let apiData = await retrieveApiData();
+let apiData = await retrieveApiData(routes);
 ([alerts, tripUpdates, vehiclePositions] = apiData);
 
 setInterval(async () => {
-    let apiData = await retrieveApiData();
+    let apiData = await retrieveApiData(routes);
     ([alerts, tripUpdates, vehiclePositions] = apiData);
 }, 300000);
 
