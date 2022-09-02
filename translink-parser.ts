@@ -33,10 +33,7 @@ interface Result {
     "Route Long Name": string;
     "Service ID": string;
     "Headsign": string;
-    "Scheduled Arrival Time": {
-        hour: number;
-        minute: number;
-    };
+    "Scheduled Arrival Time": string;
     "Live Arrival Time": string;
     "Live Position": string;
 }
@@ -368,9 +365,10 @@ function incorporateApiData(filteredStaticData: Array<StaticResult>): Array<Resu
         // stringify live arrival time
         {
             ...arrival,
-            liveArrivalTime: (!arrival.liveArrivalTime) ? "Not Available"
+            scheduledArrivalTime: `${arrival.scheduledArrivalTime.hour}:${arrival.scheduledArrivalTime.minute}`,
+            liveArrivalTime: (!arrival.liveArrivalTime) ? "As Scheduled"
                 : `${arrival.liveArrivalTime.hour}:${arrival.liveArrivalTime.minute}`,
-            livePosition: (!arrival.livePosition) ? "Not Available"
+            livePosition: (!arrival.livePosition) ? "Position Unvailable"
                 : `${arrival.livePosition.latitude}, ${arrival.livePosition.longitude}`
         }
     )).map(arrival => (
