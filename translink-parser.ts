@@ -1,4 +1,4 @@
-import { main as retrieveApiData } from "./api.js";
+import { main as retrieveApiData } from "./realtime.js";
 import { getStaticData, UQ_LAKES_STOP_ID } from "./static.js";
 
 import prompt from "prompt";
